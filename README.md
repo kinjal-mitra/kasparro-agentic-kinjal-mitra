@@ -21,17 +21,17 @@ Design and implement a **production-style agentic system** that:
 
 The system follows a **clear agent pipeline**:
 
-ParserAgent
-↓
-QuestionGenerationAgent
-↓
-ContentLogicAgent
-↓
-TemplateAgent
-↓
-ComparisonAgent
-↓
-SerializationAgent
+ParserAgent <br>
+↓<br>
+QuestionGenerationAgent <br>
+↓<br>
+ContentLogicAgent <br>
+↓<br>
+TemplateAgent <br>
+↓<br>
+ComparisonAgent <br>
+↓<br>
+SerializationAgent <br>
 
 
 Each agent has a **single responsibility**, strict input/output contracts, and no hidden global state.
@@ -65,8 +65,9 @@ Each agent has a **single responsibility**, strict input/output contracts, and n
 The pipeline generates the following machine-readable files:
 
 data/output/
-├── faq.json
-├── product_page.json
+
+├── faq.json <br>
+├── product_page.json <br>
 └── comparison_page.json
 
 
@@ -80,6 +81,8 @@ python runner.py
 
 The pipeline is OS-agnostic and uses pathlib for file handling.
 
+---
+
 ## ✅ Design Principles
 
 - Strong separation of concerns
@@ -91,6 +94,7 @@ The pipeline is OS-agnostic and uses pathlib for file handling.
 - Schema-safe agent communication
 
 - Fully testable and extensible architecture
+---
 
 ## 📌 Notes
 
@@ -99,6 +103,7 @@ The pipeline is OS-agnostic and uses pathlib for file handling.
 - Product B in comparisons is fictional but structured
 
 - All outputs are strict JSON (no free text)
+---
 
 ## 📄 Documentation
 
