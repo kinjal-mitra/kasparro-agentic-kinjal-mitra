@@ -18,6 +18,7 @@ from agents.content_logic_agent import ContentLogicAgent
 from agents.template_agent import TemplateAgent
 from agents.serialization_agent import SerializationAgent
 from agents.comparison_agent import ComparisonAgent
+from agents.answer_generation_agent import AnswerGenerationAgent
 
 from llm.llm_client import LLMClient
 
@@ -32,12 +33,14 @@ class Pipeline:
         parser_agent,
         question_agent,
         content_logic_agent,
+        answer_generation_agent,
         template_agent,
         comparison_agent
     ):
         self.parser_agent = parser_agent
         self.question_agent = question_agent
         self.content_logic_agent = content_logic_agent
+        self.answer_generation_agent = answer_generation_agent
         self.template_agent = template_agent
         self.comparison_agent = comparison_agent
 
@@ -46,10 +49,28 @@ class Pipeline:
 
         questions = self.question_agent.generate(normalized_product)
 
-        faq_items = self.content_logic_agent.generate(
-            product_data=normalized_product,
-            questions=questions
-        )
+        faq_items = []
+        for q in questions:
+            # Step 1: build supporting context (NO prose)
+            supporting_context = self.content_logic_agent.build_context(
+                product_data=normalized_product,
+                category=q["category"]
+            )
+
+            # Step 2: generate answer via LLM
+            faq_item = self.answer_generation_agent.generate_answer(
+                product=normalized_product,
+                category=q["category"],
+                question=q["question"],
+                supporting_context=supporting_context
+            )
+
+            faq_items.append({
+                "category": q["category"],
+                "question": faq_item["question"],
+                "answer": faq_item["answer"]
+            })
+
 
         faq_page = self.template_agent.build_faq_page(faq_items)
 

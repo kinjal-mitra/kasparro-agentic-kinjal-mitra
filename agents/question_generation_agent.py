@@ -2,21 +2,15 @@ from typing import Dict, List
 import json
 
 
-
 class QuestionGenerationAgent:
     """
-    Hybrid Question Generation Agent
-
-    Responsibilities:
-    - Generate categorized, human-readable user questions
-    - Guarantee minimum question coverage deterministically
-    - Optionally expand questions using an LLM
-    - Enforce strict output schema
+    Generates categorized user questions.
 
     This agent:
-    - Does NOT answer questions
-    - Does NOT add new product facts
-    - Does NOT perform templating
+    - DOES generate questions
+    - DOES NOT answer them
+    - DOES NOT add product facts
+    - DOES NOT perform templating
     """
 
     CATEGORIES = [
@@ -25,7 +19,7 @@ class QuestionGenerationAgent:
         "safety",
         "ingredients",
         "pricing",
-        "comparison"
+        "comparison",
     ]
 
     MIN_QUESTIONS_PER_CATEGORY = 3
@@ -33,7 +27,7 @@ class QuestionGenerationAgent:
     def __init__(self, llm_client=None):
         """
         llm_client: Optional LLM client.
-        If None, the agent runs in rule-only mode.
+        If provided, used only for additive expansion.
         """
         self.llm_client = llm_client
 
@@ -41,122 +35,104 @@ class QuestionGenerationAgent:
     # Public API
     # ------------------------------------------------------------------
 
-    def generate(self, normalized_product: Dict) -> List[Dict]:
+    def generate(self, product: Dict) -> List[Dict]:
         """
-        Generate categorized user questions.
-
-        Output:
+        Returns a flat list of:
         [
-          {
-            "category": "usage",
-            "question": "How should GlowBoost Vitamin C Serum be used?"
-          }
+          { "category": str, "question": str }
         ]
         """
-
-        questions_by_category = self._generate_rule_based_questions(
-            normalized_product
-        )
+        base_questions = self._generate_rule_based_questions(product)
 
         if self.llm_client:
-            llm_questions = self._generate_llm_questions(normalized_product)
-            questions_by_category = self._merge_questions(
-                questions_by_category,
-                llm_questions
-            )
+            llm_questions = self._generate_llm_questions(product)
+            base_questions = self._merge_questions(base_questions, llm_questions)
 
-        self._validate_output(questions_by_category)
+        self._validate_output(base_questions)
 
-        return self._flatten_questions(questions_by_category)
+        return self._flatten_questions(base_questions)
 
     # ------------------------------------------------------------------
-    # Rule-Based Generation (Deterministic Baseline)
+    # Rule-Based Generation (Deterministic)
     # ------------------------------------------------------------------
 
     def _generate_rule_based_questions(self, product: Dict) -> Dict[str, List[str]]:
-        product_name = product.get("product_name", "this product")
+        name = product.get("product_name", "this product")
 
         return {
             "informational": [
-                f"What is {product_name}?",
-                f"What are the main benefits of {product_name}?",
-                f"Who is {product_name} suitable for?"
+                f"What is {name}?",
+                f"What are the main benefits of {name}?",
+                f"Who is {name} suitable for?",
             ],
             "usage": [
-                f"How should {product_name} be used?",
-                f"When is the best time to use {product_name}?",
-                f"How often should {product_name} be applied?"
+                f"How should {name} be used?",
+                f"When should {name} be applied?",
+                f"How often can {name} be used?",
             ],
             "safety": [
-                f"Is {product_name} safe to use?",
-                f"Are there any side effects of {product_name}?",
-                f"Is {product_name} suitable for sensitive skin?"
+                f"Is {name} safe to use?",
+                f"Are there any side effects of {name}?",
+                f"Is {name} suitable for sensitive skin?",
             ],
             "ingredients": [
-                f"What ingredients are used in {product_name}?",
-                f"What role do the ingredients in {product_name} play?",
-                f"Does {product_name} contain active ingredients?"
+                f"What ingredients are used in {name}?",
+                f"Does {name} contain active ingredients?",
+                f"What is the concentration of key ingredients in {name}?",
             ],
             "pricing": [
-                f"What is the price of {product_name}?",
-                f"Is {product_name} affordable?",
-                f"Does {product_name} offer good value for money?"
+                f"What is the price of {name}?",
+                f"Is {name} affordable?",
+                f"Does {name} offer good value for money?",
             ],
             "comparison": [
-                f"How does {product_name} compare to similar products?",
-                f"Is {product_name} better than alternatives?",
-                f"What makes {product_name} different from competitors?"
-            ]
+                f"How does {name} compare to similar products?",
+                f"What makes {name} different from alternatives?",
+                f"Is {name} better than competing products?",
+            ],
         }
 
     # ------------------------------------------------------------------
-    # LLM-Based Expansion (Optional, Additive Only)
+    # Optional LLM Expansion (Additive Only)
     # ------------------------------------------------------------------
 
     def _generate_llm_questions(self, product: Dict) -> Dict[str, List[str]]:
-        """
-        Uses LLM to generate additional question variants.
-        Must return STRICT JSON.
-        """
-
         prompt = self._build_llm_prompt(product)
-        raw_response = self.llm_client.generate(prompt)
+        raw = self.llm_client.generate(prompt)
 
         try:
-            parsed = json.loads(raw_response)
+            parsed = json.loads(raw)
             if isinstance(parsed, dict):
                 return parsed
         except json.JSONDecodeError:
             pass
 
-        # Fail silently — deterministic baseline remains valid
         return {}
 
     def _build_llm_prompt(self, product: Dict) -> str:
         return f"""
-You are generating user questions for a product content system.
+                You are generating additional user questions.
 
-Rules:
-- Use ONLY the provided product data
-- Do NOT add or infer new facts
-- Do NOT answer the questions
-- Generate only question variants
-- Output STRICTLY valid JSON
-- Keys must be exactly: {self.CATEGORIES}
+                Rules:
+                - Use ONLY the provided product data
+                - Do NOT add new facts
+                - Do NOT answer the questions
+                - Output STRICT JSON
+                - Keys must be exactly: {self.CATEGORIES}
 
-Product Data:
-{json.dumps(product, indent=2)}
+                Product Data:
+                {json.dumps(product, indent=2)}
 
-Output Format:
-{{
-  "informational": [string],
-  "usage": [string],
-  "safety": [string],
-  "ingredients": [string],
-  "pricing": [string],
-  "comparison": [string]
-}}
-        """
+                Output format:
+                {{
+                "informational": [string],
+                "usage": [string],
+                "safety": [string],
+                "ingredients": [string],
+                "pricing": [string],
+                "comparison": [string]
+                }}
+                """.strip()
 
     # ------------------------------------------------------------------
     # Merge & Validation
@@ -165,17 +141,14 @@ Output Format:
     def _merge_questions(
         self,
         base: Dict[str, List[str]],
-        extra: Dict[str, List[str]]
+        extra: Dict[str, List[str]],
     ) -> Dict[str, List[str]]:
-        """
-        Merge LLM-generated questions additively.
-        """
 
         for category in self.CATEGORIES:
             if category in extra and isinstance(extra[category], list):
                 base[category].extend(extra[category])
 
-        # Deduplicate while preserving order
+        # Deduplicate
         for category, questions in base.items():
             seen = set()
             base[category] = [
@@ -186,18 +159,9 @@ Output Format:
         return base
 
     def _validate_output(self, questions: Dict[str, List[str]]) -> None:
-        """
-        Enforces strict schema and minimum guarantees.
-        """
-
         for category in self.CATEGORIES:
             if category not in questions:
                 raise ValueError(f"Missing category: {category}")
-
-            if not isinstance(questions[category], list):
-                raise ValueError(
-                    f"Category '{category}' must be a list"
-                )
 
             if len(questions[category]) < self.MIN_QUESTIONS_PER_CATEGORY:
                 raise ValueError(
@@ -208,26 +172,16 @@ Output Format:
             for q in questions[category]:
                 if not isinstance(q, str) or "?" not in q:
                     raise ValueError(
-                        f"Invalid question detected in '{category}': {q}"
+                        f"Invalid question in '{category}': {q}"
                     )
 
     # ------------------------------------------------------------------
-    # Final Shape Conversion (Critical)
+    # Flatten for Pipeline Consumption
     # ------------------------------------------------------------------
 
     def _flatten_questions(self, questions: Dict[str, List[str]]) -> List[Dict]:
-        """
-        Converts categorized questions into a flat list of
-        {category, question} objects for downstream agents.
-        """
-
-        flattened = []
-
-        for category, qs in questions.items():
-            for q in qs:
-                flattened.append({
-                    "category": category,
-                    "question": q
-                })
-
-        return flattened
+        return [
+            {"category": category, "question": q}
+            for category, qs in questions.items()
+            for q in qs
+        ]

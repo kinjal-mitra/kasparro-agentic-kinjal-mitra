@@ -1,114 +1,108 @@
-# Kasparro – Agentic Content Generation System
+# Kasparro – Multi-Agent Content Generation System
 
-A modular **multi-agent content generation pipeline** that transforms structured product data into **machine-readable content pages** (FAQ, Product Page, Comparison Page) using clean agent boundaries and deterministic logic.
+This repository implements a **modular, agentic automation system** that transforms structured product data into fully generated, machine-readable content pages.
 
-This project is built as part of the **Kasparro – Applied AI Engineer Challenge**.
+The system is designed as part of the **Kasparro – Applied AI Engineer Challenge**, with a strong emphasis on **agent boundaries, orchestration, and extensibility** rather than prompt engineering or copywriting.
 
 ---
 
 ## 🎯 Objective
 
-Design and implement a **production-style agentic system** that:
-- Parses product data
-- Generates categorized user questions
-- Applies reusable content logic blocks
-- Assembles structured JSON pages
-- Runs end-to-end via agent orchestration (not a monolith)
+Automatically generate structured content pages from a small product dataset using a **multi-agent pipeline**, without relying on a monolithic LLM script.
+
+The system produces:
+- FAQ Page (question-aware, LLM-generated answers)
+- Product Description Page
+- Comparison Page (against a fictional product)
+
+All outputs are generated as **clean JSON files**.
 
 ---
 
-## 🧠 System Overview
+## 🧠 Core Design Principles
 
-The system follows a **clear agent pipeline**:
+- **Single-responsibility agents**
+- **Explicit input/output contracts**
+- **LLM usage isolated to one agent**
+- **No hidden global state**
+- **Deterministic + extensible workflow**
 
-ParserAgent <br>
-↓<br>
-QuestionGenerationAgent <br>
-↓<br>
-ContentLogicAgent <br>
-↓<br>
-TemplateAgent <br>
-↓<br>
-ComparisonAgent <br>
-↓<br>
-SerializationAgent <br>
-
-
-Each agent has a **single responsibility**, strict input/output contracts, and no hidden global state.
+This is a **systems design challenge**, not a content-writing exercise.
 
 ---
 
-## 🧩 Key Agents
+## 🧩 High-Level Architecture
+
+```
+ParserAgent
+   ↓
+QuestionGenerationAgent
+   ↓
+ContentLogicAgent  (facts only)
+   ↓
+AnswerGenerationAgent (LLM)
+   ↓
+TemplateAgent
+   ↓
+SerializationAgent
+```
+
+Comparison logic runs in parallel using a dedicated `ComparisonAgent`.
+
+---
+
+## 🤖 Key Agents
 
 - **ParserAgent**  
-  Normalizes raw product input into a canonical schema.
+  Normalizes raw product input into an internal schema.
 
 - **QuestionGenerationAgent**  
-  Generates categorized, human-readable user questions using a deterministic baseline with optional LLM expansion.
+  Generates categorized, human-readable user questions (rule-based + optional LLM expansion).
 
 - **ContentLogicAgent**  
-  Produces answers using reusable, rule-based content logic blocks.
+  Extracts structured, category-specific factual context from product data.
+
+- **AnswerGenerationAgent**  
+  Uses the LLM to generate a **unique answer per question**, grounded strictly in provided data.
 
 - **TemplateAgent**  
-  Assembles final page-level JSON structures (FAQ, Product, Comparison).
-
-- **ComparisonAgent**  
-  Compares the main product with a fictional alternative using the same normalized schema.
+  Assembles final JSON pages using predefined templates.
 
 - **SerializationAgent**  
-  Writes clean, validated JSON outputs to disk.
+  Writes machine-readable output files to disk.
 
 ---
 
-## 📁 Output
+## 📦 Output
 
-The pipeline generates the following machine-readable files:
+Generated files (JSON):
+- `faq.json`
+- `product_page.json`
+- `comparison_page.json`
 
-data/output/
-
-├── faq.json <br>
-├── product_page.json <br>
-└── comparison_page.json
-
+Each file is structured, deterministic, and suitable for downstream systems.
 
 ---
 
-## ▶️ How to Run
+## 🚀 How to Run
 
-```bash
-python runner.py
-```
+1. Place product data in:
+   ```
+   data/input/product_data.json
+   ```
 
-The pipeline is OS-agnostic and uses pathlib for file handling.
+2. Run:
+   ```bash
+   python runner.py
+   ```
+
+3. Outputs will be written to:
+   ```
+   data/output/
+   ```
 
 ---
 
-## ✅ Design Principles
+## 🧠 Final Note
 
-- Strong separation of concerns
-
-- Deterministic core with optional LLM usage
-
-- Reusable logic blocks
-
-- Schema-safe agent communication
-
-- Fully testable and extensible architecture
----
-
-## 📌 Notes
-
-- No external data or research is used
-
-- Product B in comparisons is fictional but structured
-
-- All outputs are strict JSON (no free text)
----
-
-## 📄 Documentation
-
-- Detailed system design and assumptions are available in:
-
-```bash
-docs/projectdocumentation.md
-```
+This repository prioritizes **engineering clarity and system correctness** over surface-level content quality — exactly as expected in real-world agentic systems.

@@ -1,201 +1,172 @@
-# Project Documentation
-
-**Kasparro – AI Agentic Content Generation System**
+# Project Documentation  
+## Kasparro – Multi-Agent Content Generation System
 
 ---
 
 ## Problem Statement
 
-Product content generation (FAQs, product pages, and product comparisons) is repetitive, rule-heavy, and difficult to scale consistently without clear system boundaries.
-This project demonstrates a **modular, agent-based automation system** that transforms raw product data into structured, machine-readable content using clearly defined agents and orchestration logic.
+Design and implement a modular agentic system that automatically converts structured product data into multiple machine-readable content pages, without relying on a monolithic LLM script.
 
-The focus of this project is on **system design, agent responsibilities, and data flow**, rather than domain expertise or UI presentation.
+The focus is on **system design, orchestration, and agent responsibilities**, not domain expertise or content writing.
 
 ---
 
 ## Expected Inputs
 
-* Raw product data provided as structured JSON.
-* Mandatory product attributes:
+- A structured JSON-like product dataset containing:
+  - Product name
+  - Ingredients
+  - Benefits
+  - Usage instructions
+  - Safety information
+  - Price
 
-  * Product name
-  * Concentration or specification
-  * Skin type compatibility
-  * Key ingredients
-  * Benefits
-  * Usage instructions
-  * Safety or side-effect information
-  * Price
-* No external data sources or enrichment are used.
-* An internally constructed fictional product may be used strictly for comparison purposes.
+This dataset is the **only source of truth** used by the system.
 
 ---
 
 ## Expected Outputs
 
-The system generates **three independent, machine-readable JSON outputs**:
+The system generates the following **machine-readable JSON outputs**:
 
-1. **FAQ Page (`faq.json`)**
+- FAQ Page (question–answer pairs)
+- Product Description Page
+- Comparison Page (vs a fictional product)
 
-   * Categorized user questions
-   * Deterministic, rule-based answers
-   * Optional LLM-backed variation without introducing new facts
-
-2. **Product Page (`product_page.json`)**
-
-   * Product overview
-   * Ingredients
-   * Benefits
-   * Usage instructions
-   * Pricing details
-   * Safety information
-   * Skin-type suitability
-
-3. **Comparison Page (`comparison_page.json`)**
-
-   * Side-by-side comparison of two products
-   * Price comparison
-   * Ingredient overlap
-   * Benefit comparison
-   * Rule-based summary
-
-All outputs are:
-
-* Structured
-* Deterministic
-* Schema-consistent
-* Suitable for CMS platforms, APIs, and downstream automation pipelines
+All outputs are deterministic in structure and suitable for downstream systems.
 
 ---
 
-## High-Level System Flow
+## Solution Overview
+
+The solution is implemented as a **multi-agent pipeline**, where each agent has a single responsibility and communicates via explicit data contracts.
+
+The Large Language Model (LLM) is used **only where reasoning and natural language synthesis are required**, and never as a monolithic content generator.
+
+---
+
+## System Design (Core Section)
+
+### 1. High-Level Architecture
 
 ```
-Raw Product Data
-      ↓
-ParserAgent
-      ↓
-QuestionGenerationAgent
-      ↓
-ContentLogicAgent (Product Page + FAQ only)
-      ↓
-ComparisonAgent (Comparison only)
-      ↓
-TemplateAgent
-      ↓
-SerializationAgent
-      ↓
-JSON Outputs
++------------------+
+|  Raw Product     |
+|     Data         |
++--------+---------+
+         |
+         v
++------------------+
+|   ParserAgent    |
+| (Normalization)  |
++--------+---------+
+         |
+         v
++--------------------------+
+| QuestionGenerationAgent  |
+| (What should users ask?) |
++--------+-----------------+
+         |
+         v
++------------------------------------+
+|   For Each Generated Question      |
++----------------+-------------------+
+                 |
+                 v
+      +------------------------+
+      |  ContentLogicAgent     |
+      |  (Facts Only Context)  |
+      +-----------+------------+
+                  |
+                  v
+      +------------------------+
+      | AnswerGenerationAgent  |
+      | (LLM – One Q, One A)   |
+      +-----------+------------+
+                  |
+                  v
++--------------------------+
+|     TemplateAgent        |
+| (Structured JSON Pages)  |
++--------+-----------------+
+         |
+         v
++--------------------------+
+|  SerializationAgent     |
+| (Write JSON to Disk)    |
++--------------------------+
 ```
 
 ---
 
-## Agent Responsibilities
+### 2. Detailed Orchestration Flow (FAQ Path)
 
-### 1. ParserAgent
-
-* Validates required fields in raw input data
-* Cleans and normalizes product information
-* Produces a standardized internal product representation
-* Does not perform content generation or formatting
-
----
-
-### 2. QuestionGenerationAgent
-
-* Generates categorized user questions, including:
-
-  * Informational
-  * Usage
-  * Safety
-  * Ingredients
-  * Pricing
-  * Comparison
-* Guarantees minimum question coverage per category
-* Optionally enhances question diversity using an injected LLM
-* Does **not** answer questions or add product facts
-
----
-
-### 3. ContentLogicAgent
-
-* Generates structured **content blocks** for:
-
-  * Product pages
-  * FAQ pages
-* Applies deterministic, rule-based transformations
-* Does **not** perform product comparisons
-* Does **not** render templates or serialize output
+```
+Start
+  |
+  v
+Parse raw product data
+  |
+  v
+Generate categorized questions
+  |
+  v
+FOR EACH QUESTION:
+    |
+    +--> Extract factual context (ContentLogicAgent)
+    |
+    +--> Generate answer using LLM (AnswerGenerationAgent)
+    |
+    +--> Attach answer to question
+  |
+  v
+Assemble FAQ JSON (TemplateAgent)
+  |
+  v
+Write faq.json to disk
+  |
+ End
+```
 
 ---
 
-### 4. ComparisonAgent
+### 3. Agent Responsibilities
 
-* Sole owner of all **product comparison logic**
-* Compares products based on:
+**ParserAgent**
+```
+Raw JSON  -->  Normalized Product Object
+```
 
-  * Pricing
-  * Ingredients
-  * Benefits
-* Produces a structured comparison object
-* Contains no templating, serialization, or orchestration logic
+**QuestionGenerationAgent**
+```
+Product Data  -->  { category, question }[]
+```
 
----
+**ContentLogicAgent**
+```
+Product Data + Category  -->  Structured Facts
+```
 
-### 5. TemplateAgent
+**AnswerGenerationAgent**
+```
+Facts + Question  -->  Natural Language Answer
+```
 
-* Converts structured content blocks into finalized page layouts
-* Applies page-specific templates for:
+**TemplateAgent**
+```
+Q&A Blocks  -->  Final JSON Pages
+```
 
-  * Product pages
-  * FAQ pages
-  * Comparison pages
-* Does not infer, modify, or enrich data
+**SerializationAgent**
+```
+JSON Object  -->  File on Disk
+```
 
----
-
-### 6. SerializationAgent
-
-* Writes finalized pages to disk as JSON files
-* Handles output directory creation
-* Ensures clean, machine-readable formatting
-* Does not perform content logic or validation
-
----
-
-## Orchestration Strategy
-
-* The system is coordinated by a central **Orchestrator**.
-* Each agent:
-
-  * Has a single, well-defined responsibility
-  * Exposes clear input and output contracts
-  * Operates without shared global state
-* The orchestrator manages:
-
-  * Execution order
-  * Dependency injection (e.g., optional LLM client)
-  * Data flow between agents
-
-This orchestration approach ensures:
-
-* Modularity
-* Testability
-* Extensibility
-* Clear separation of concerns
+**ComparisonAgent**
+```
+Product A + Product B  -->  Comparison Blocks
+```
 
 ---
 
-## Scope and Assumptions
 
-* The system operates strictly on provided input data.
-* No external knowledge or enrichment is introduced.
-* Content quality is driven by structure and logic rather than creative writing.
-* The system is designed for backend automation, not UI rendering.
-
----
-
-## Conclusion
-
-This project demonstrates a **production-style agentic automation system** with clearly separated responsibilities across parsing, question generation, content logic, comparison, templating, and serialization.
-The architecture emphasizes correctness, extensibility, and clarity—closely reflecting real-world AI-driven content generation pipelines used in scalable systems.

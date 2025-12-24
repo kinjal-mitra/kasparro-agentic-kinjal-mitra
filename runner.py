@@ -7,6 +7,8 @@ from agents.content_logic_agent import ContentLogicAgent
 from agents.template_agent import TemplateAgent
 from agents.serialization_agent import SerializationAgent
 from agents.comparison_agent import ComparisonAgent
+from agents.answer_generation_agent import AnswerGenerationAgent
+from llm.llm_client import LLMClient
 from pipeline import Pipeline
 
 
@@ -39,12 +41,14 @@ def main():
     # ------------------------------------------------------------------
     # Instantiate agents
     # ------------------------------------------------------------------
+    llm_client = LLMClient()
     parser_agent = ParserAgent()
     question_agent = QuestionGenerationAgent()
     content_logic_agent = ContentLogicAgent()
     template_agent = TemplateAgent()
     serialization_agent = SerializationAgent(output_dir=output_dir)
     comparison_agent = ComparisonAgent()
+    answer_generation_agent = AnswerGenerationAgent(llm_client)
 
     # ------------------------------------------------------------------
     # Build pipeline
@@ -53,6 +57,7 @@ def main():
         parser_agent=parser_agent,
         question_agent=question_agent,
         content_logic_agent=content_logic_agent,
+        answer_generation_agent=answer_generation_agent,
         template_agent=template_agent,
         comparison_agent=comparison_agent
     )
@@ -71,7 +76,7 @@ def main():
     # serialization_agent.write_product_page(pages["product_page"])
     # serialization_agent.write_comparison_page(pages["comparison_page"])
 
-    print("✅ Content generation pipeline completed successfully.")
+    print(" Content generation pipeline completed successfully.")
 
 
 if __name__ == "__main__":
