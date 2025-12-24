@@ -1,0 +1,36 @@
+{
+  "page_type": "comparison",
+  "products_compared": {
+    "product_a": "GlowBoost Vitamin C Serum",
+    "product_b": "RadiantPlus Vitamin C Serum"
+  },
+  "price_comparison": {
+    "GlowBoost Vitamin C Serum": 699,
+    "RadiantPlus Vitamin C Serum": 799,
+    "cheaper_option": "GlowBoost Vitamin C Serum"
+  },
+  "ingredients_comparison": {
+    "GlowBoost Vitamin C Serum": [
+      "Vitamin C",
+      "Hyaluronic Acid"
+    ],
+    "RadiantPlus Vitamin C Serum": [
+      "Vitamin C",
+      "Niacinamide"
+    ],
+    "common_ingredients": [
+      "Vitamin C"
+    ]
+  },
+  "benefits_comparison": {
+    "GlowBoost Vitamin C Serum": [
+      "Brightening",
+      "Fades dark spots"
+    ],
+    "RadiantPlus Vitamin C Serum": [
+      "Hydration",
+      "Glow"
+    ]
+  },
+  "summary": "GlowBoost Vitamin C Serum focuses on Brightening, Fades dark spots, while RadiantPlus Vitamin C Serum offers Hydration, Glow."
+}
