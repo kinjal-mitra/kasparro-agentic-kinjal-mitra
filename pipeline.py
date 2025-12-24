@@ -23,81 +23,64 @@ from llm.llm_client import LLMClient
 
 
 class Pipeline:
-    def __init__(self, use_llm: bool = True):
-        self.llm_client = LLMClient() if use_llm else None
+    """
+    Orchestrates the multi-agent content generation workflow.
+    """
 
-        self.parser_agent = ParserAgent()
-        self.question_agent = QuestionGenerationAgent(
-            llm_client=self.llm_client
-        )
-        self.content_logic_agent = ContentLogicAgent(
-            llm_client=self.llm_client
-        )
-        self.comparison_agent = ComparisonAgent()
-
-        self.template_agent = TemplateAgent()
-        self.serialization_agent = SerializationAgent()
+    def __init__(
+        self,
+        parser_agent,
+        question_agent,
+        content_logic_agent,
+        template_agent,
+        comparison_agent
+    ):
+        self.parser_agent = parser_agent
+        self.question_agent = question_agent
+        self.content_logic_agent = content_logic_agent
+        self.template_agent = template_agent
+        self.comparison_agent = comparison_agent
 
     def run(self, raw_product_data: dict) -> dict:
         normalized_product = self.parser_agent.parse(raw_product_data)
 
         questions = self.question_agent.generate(normalized_product)
 
-        product_blocks = self.content_logic_agent.generate(
-            content_type="product_page",
-            payload=normalized_product,
+        faq_items = self.content_logic_agent.generate(
+            product_data=normalized_product,
+            questions=questions
         )
 
-        faq_blocks = self.content_logic_agent.generate(
-            content_type="faq",
-            payload={
-                "product": normalized_product,
-                "questions": questions,
-            },
-        )
+        faq_page = self.template_agent.build_faq_page(faq_items)
 
         comparison_blocks = self.comparison_agent.compare(
             product_a=normalized_product,
-            product_b=self._build_fictional_product(),
+            product_b=self._build_fictional_product()
         )
 
-        product_page = self.template_agent.render(
-            content_type="product_page",
-            structured_blocks=product_blocks,
+        comparison_page = self.template_agent.build_comparison_page(
+            comparison_blocks
         )
 
-        faq_page = self.template_agent.render(
-            content_type="faq",
-            structured_blocks=faq_blocks,
-        )
-
-        comparison_page = self.template_agent.render(
-            content_type="comparison",
-            structured_blocks=comparison_blocks,
+        product_page = self.template_agent.build_product_page(
+            normalized_product
         )
 
         return {
-            "product_page": self.serialization_agent.serialize(
-                page_type="product_page",
-                page_content=product_page,
-            ),
-            "faq": self.serialization_agent.serialize(
-                page_type="faq",
-                page_content=faq_page,
-            ),
-            "comparison": self.serialization_agent.serialize(
-                page_type="comparison",
-                page_content=comparison_page,
-            ),
+            "faq_page": faq_page,
+            "product_page": product_page,
+            "comparison_page": comparison_page
         }
 
     def _build_fictional_product(self) -> dict:
         return {
-            "name": "RadiantPlus Vitamin C Serum",
+            "product_name": "RadiantPlus Vitamin C Serum",
             "concentration": "8% Vitamin C",
             "skin_type": ["Dry", "Normal"],
-            "ingredients": ["Vitamin C", "Niacinamide"],
+            "key_ingredients": ["Vitamin C", "Niacinamide"],
             "benefits": ["Hydration", "Glow"],
-            "usage": "Apply at night after cleansing",
+            "how_to_use": "Apply at night after cleansing",
             "price": 799,
         }
+
+

@@ -1,0 +1,13 @@
+{
+  "type": "object",
+  "required": [
+    "page_type",
+    "product_overview",
+    "ingredients_section",
+    "benefits_section",
+    "usage_section",
+    "pricing_section",
+    "safety_section",
+    "skin_type_section"
+  ]
+}

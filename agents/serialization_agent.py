@@ -16,41 +16,68 @@ Outputs:
 - file_path (str)
 """
 
+
 import json
-import os
-from typing import Dict
 from pathlib import Path
+from typing import Dict
+
 
 class SerializationAgent:
-    DEFAULT_OUTPUT_DIR = "data/output"
 
-    FILE_MAP = {
-        "product_page": "product_page.json",
-        "faq": "faq.json",
-        "comparison": "comparison_page.json",
-    }
+    def __init__(self, output_dir: str = "data/output"):
+        self.output_dir = Path(output_dir)
+        self.output_dir.mkdir(parents=True, exist_ok=True)
 
-    def serialize(
-        self,
-        page_type: str,
-        page_content: Dict,
-        output_dir: str | None = None,
-    ) -> str:
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def write_faq_page(self, faq_page: Dict) -> None:
         """
-        Writes page_content to disk as JSON and returns file path
+        Writes faq.json
+        """
+        self._write_json(
+            data=faq_page,
+            filename="faq.json"
+        )
+
+    def write_product_page(self, product_page: Dict) -> None:
+        """
+        Writes product_page.json
+        """
+        self._write_json(
+            data=product_page,
+            filename="product_page.json"
+        )
+
+    def write_comparison_page(self, comparison_page: Dict) -> None:
+        """
+        Writes comparison_page.json
+        """
+        self._write_json(
+            data=comparison_page,
+            filename="comparison_page.json"
+        )
+
+    # ------------------------------------------------------------------
+    # Internal Helpers
+    # ------------------------------------------------------------------
+
+    def _write_json(self, data: Dict, filename: str) -> None:
+        """
+        Writes a dictionary as formatted JSON to the output directory.
         """
 
-        if page_type not in self.FILE_MAP:
-            raise ValueError(f"Unsupported page_type: {page_type}")
+        if not isinstance(data, dict):
+            raise ValueError("Serialized data must be a dictionary")
 
-        output_dir = Path(output_dir or self.DEFAULT_OUTPUT_DIR)
-        output_dir.mkdir(parents=True, exist_ok=True)
+        file_path = self.output_dir / filename
 
-        #file_name = self.FILE_MAP[page_type]
-        #file_path = os.path.join(output_dir, file_name)
-        file_path = output_dir / self.FILE_MAP[page_type]
+        with file_path.open("w", encoding="utf-8") as f:
+            json.dump(
+                data,
+                f,
+                indent=2,
+                ensure_ascii=False
+            )
 
-        with open(file_path, "w", encoding="utf-8") as f:
-            json.dump(page_content, f, indent=2, ensure_ascii=False)
-
-        return file_path

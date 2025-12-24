@@ -1,0 +1,11 @@
+{
+  "type": "object",
+  "required": [
+    "page_type",
+    "products_compared",
+    "price_comparison",
+    "ingredients_comparison",
+    "benefits_comparison",
+    "summary"
+  ]
+}

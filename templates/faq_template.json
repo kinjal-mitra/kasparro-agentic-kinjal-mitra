@@ -1,0 +1,8 @@
+{
+  "type": "object",
+  "required": [
+    "page_type",
+    "total_questions",
+    "questions"
+  ]
+}

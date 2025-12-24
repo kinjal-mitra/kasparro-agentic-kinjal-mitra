@@ -2,3 +2,5 @@ venv/
 .env
 .pytest_cache/
 __pycache__/
+Instructions_pdf.pdf
+directory_structure.py

@@ -15,138 +15,107 @@ Inputs:
 Outputs:
 - structured dict blocks ready for template_agent
 """
-from typing import Dict
 
+from typing import Dict, List
 
 class ContentLogicAgent:
-    def __init__(self, llm_client=None):
-        self.llm_client = llm_client
+    """
+    Content Logic Agent
 
-    # -------------------------
-    # Public Entry Point
-    # -------------------------
-    def generate(self, content_type: str, payload: Dict) -> Dict:
-        if content_type == "product_page":
-            return self._product_page_blocks(payload)
+    Responsibilities:
+    - Accepts generated questions with categories
+    - Routes each question to the correct logic block
+    - Generates deterministic answers using product data
+    - Produces Q&A objects for downstream templating
 
-        if content_type == "faq":
-            return self._faq_blocks(payload)
+    This agent:
+    - Does NOT generate questions
+    - Does NOT perform templating
+    - Does NOT add new product facts
+    """
 
-        raise ValueError(f"Unsupported content_type: {content_type}")
-
-    # -------------------------
-    # Product Page Logic
-    # -------------------------
-    def _product_page_blocks(self, product: Dict) -> Dict:
-        return {
-            "overview": self._overview_block(product),
-            "ingredients": self._ingredients_block(product),
-            "benefits": self._benefits_block(product),
-            "usage": self._usage_block(product),
-            "pricing": self._pricing_block(product),
-            "safety": self._safety_block(product),
-            "skin_type": self._skin_type_block(product),
+    def __init__(self):
+        self.logic_blocks = {
+            "informational": self._informational_block,
+            "usage": self._usage_block,
+            "safety": self._safety_block,
+            "ingredients": self._ingredients_block,
+            "pricing": self._pricing_block,
+            "comparison": self._comparison_block
         }
 
-    def _overview_block(self, product: Dict) -> Dict:
-        return {
-            "title": product["name"],
-            "summary": (
-                f"{product['name']} is a {product['concentration']} serum "
-                f"designed for {', '.join(product['skin_type'])} skin types."
-            ),
-        }
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
 
-    def _ingredients_block(self, product: Dict) -> Dict:
-        return {
-            "key_ingredients": product["ingredients"],
-            "ingredient_count": len(product["ingredients"]),
-        }
+    def generate(
+        self,
+        product_data: Dict,
+        questions: List[Dict]
+    ) -> List[Dict]:
+        """
+        Input:
+        - product_data (dict)
+        - questions: List[{ category, question }]
 
-    def _benefits_block(self, product: Dict) -> Dict:
-        return {
-            "primary_benefits": product["benefits"],
-            "benefit_count": len(product["benefits"]),
-        }
+        Output:
+        - List[{ category, question, answer }]
+        """
 
-    def _usage_block(self, product: Dict) -> Dict:
-        return {
-            "how_to_use": product["usage"],
-            "recommended_time": "Morning",
-        }
+        answered_questions = []
 
-    def _pricing_block(self, product: Dict) -> Dict:
-        return {
-            "price": product["price"],
-            "currency": "INR",
-            "value_positioning": "Mid-range",
-        }
+        for item in questions:
+            category = item.get("category")
+            question_text = item.get("question")
 
-    def _safety_block(self, product: Dict) -> Dict:
-        return {
-            "side_effects": product.get("side_effects", []),
-            "disclaimer": "Patch test recommended for sensitive skin.",
-        }
+            if category not in self.logic_blocks:
+                raise ValueError(f"Unsupported category: {category}")
 
-    def _skin_type_block(self, product: Dict) -> Dict:
-        return {
-            "suitable_for": product["skin_type"],
-            "not_recommended_for": [],
-        }
+            answer = self.logic_blocks[category](product_data)
 
-    # -------------------------
-    # FAQ Logic
-    # -------------------------
-    def _faq_blocks(self, payload: Dict) -> Dict:
-        product = payload["product"]
-        questions = payload["questions"]
+            answered_questions.append({
+                "category": category,
+                "question": question_text,
+                "answer": answer
+            })
 
-        faqs = []
+        return answered_questions
 
-        for q in questions:
-            if isinstance(q, str):
-                question_obj = {"question": q, "category": "general"}
-            elif isinstance(q, dict):
-                question_obj = q
-            else:
-                raise ValueError(f"Invalid question format: {q}")
+    # ------------------------------------------------------------------
+    # Logic Blocks (Deterministic, Rule-Based)
+    # ------------------------------------------------------------------
 
-            faqs.append(
-                {
-                    "question": question_obj["question"],
-                    "category": question_obj.get("category", "general"),
-                    "answer": self._generate_answer(product, question_obj),
-                }
+    def _informational_block(self, product: Dict) -> str:
+        return (
+            f"{product['name']} is a skincare serum containing "
+            f"{product['concentration']} Vitamin C. It is designed for "
+            f"{', '.join(product['skin_type'])} skin types and helps with "
+            f"{', '.join(product['benefits']).lower()}."
+        )
+
+    def _usage_block(self, product: Dict) -> str:
+        return product["usage"]
+
+    def _safety_block(self, product: Dict) -> str:
+        side_effects = product.get("side_effects")
+        if side_effects:
+            return (
+                f"The product is generally safe to use. "
+                f"However, {side_effects.lower()}."
             )
+        return "The product is generally safe to use."
 
-        return {
-            "faq_count": len(faqs),
-            "faqs": faqs,
-        }
+    def _ingredients_block(self, product: Dict) -> str:
+        ingredients = ", ".join(product["ingredients"])
+        return f"The key ingredients in this product are {ingredients}."
 
-    def _generate_answer(self, product: Dict, question: Dict) -> str:
-        category = question["category"].lower()
+    def _pricing_block(self, product: Dict) -> str:
+        return f"The price of the product is {product['price']}."
 
-        if category == "usage":
-            return product["usage"]
-
-        if category == "safety":
-            return product.get(
-                "side_effects", "No major side effects reported."
-            )
-
-        if category == "pricing":
-            return f"The product is priced at {product['price']}."
-
-        if category == "ingredients":
-            return f"Key ingredients include {', '.join(product['ingredients'])}."
-
-        if self.llm_client:
-            prompt = (
-                f"Answer the following question using only this product data:\n"
-                f"Product: {product}\n"
-                f"Question: {question['question']}"
-            )
-            return self.llm_client.generate(prompt)
-
-        return "Information available on the product page."
+    def _comparison_block(self, product: Dict) -> str:
+        return (
+            "A direct comparison cannot be made because details of other "
+            "products are not available. This product contains "
+            f"{product['concentration']} Vitamin C and is priced at "
+            f"{product['price']}."
+        )

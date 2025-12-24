@@ -1,36 +1,96 @@
 {
   "page_type": "faq",
-  "total_questions": 6,
+  "total_questions": 18,
   "questions": [
     {
-      "question": "informational",
-      "category": "general",
-      "answer": "Based on the provided product data for GlowBoost Vitamin C Serum:\n\nThis is a skincare serum containing 10% Vitamin C, designed primarily for oily and combination skin types. The key ingredients are Vitamin C and Hyaluronic Acid, which offer brightening benefits and help fade dark spots. \n\nUsage instructions recommend applying 2-3 drops in the morning before sunscreen. Users with sensitive skin may experience a mild tingling sensation when using the product.\n\nThe serum is priced at ₹699 and is formulated to improve skin tone and texture by targeting hyperpigmentation and providing hydration."
+      "category": "informational",
+      "question": "What is this product?",
+      "answer": "GlowBoost Vitamin C Serum is a skincare serum containing 10% Vitamin C Vitamin C. It is designed for Oily, Combination skin types and helps with brightening, fades dark spots."
     },
     {
-      "question": "usage",
-      "category": "general",
-      "answer": "According to the product data, the usage instructions for the GlowBoost Vitamin C Serum are: \"Apply 2–3 drops in the morning before sunscreen\""
+      "category": "informational",
+      "question": "What are the main benefits of this product?",
+      "answer": "GlowBoost Vitamin C Serum is a skincare serum containing 10% Vitamin C Vitamin C. It is designed for Oily, Combination skin types and helps with brightening, fades dark spots."
     },
     {
-      "question": "safety",
-      "category": "general",
-      "answer": "Based on the product data provided, the GlowBoost Vitamin C Serum appears to be generally safe for use, with a note about potential mild tingling for those with sensitive skin. The serum is recommended for oily and combination skin types and contains Vitamin C and Hyaluronic Acid. The usage instructions suggest applying 2-3 drops in the morning before sunscreen. The side effect mentioned is a mild tingling sensation, which may occur for those with sensitive skin."
+      "category": "informational",
+      "question": "Who is this product suitable for?",
+      "answer": "GlowBoost Vitamin C Serum is a skincare serum containing 10% Vitamin C Vitamin C. It is designed for Oily, Combination skin types and helps with brightening, fades dark spots."
     },
     {
-      "question": "ingredients",
-      "category": "general",
-      "answer": "Based on the product data, the ingredients for the GlowBoost Vitamin C Serum are:\n1. Vitamin C\n2. Hyaluronic Acid"
+      "category": "usage",
+      "question": "How should this product be used?",
+      "answer": "Apply 2–3 drops in the morning before sunscreen"
     },
     {
-      "question": "pricing",
-      "category": "general",
-      "answer": "Based on the product data, the price of the GlowBoost Vitamin C Serum is 699 (presumably in a specific currency, though the currency is not specified in the data)."
+      "category": "usage",
+      "question": "When is the best time to use this product?",
+      "answer": "Apply 2–3 drops in the morning before sunscreen"
     },
     {
-      "question": "comparison",
-      "category": "general",
-      "answer": "Based solely on the provided product data, I cannot perform a comparison since only one product's details are available. To do a comparison, I would need data for at least one additional product to evaluate differences in features, benefits, price, or other characteristics.\n\nThe current product details show:\n- Name: GlowBoost Vitamin C Serum\n- Concentration: 10% Vitamin C\n- Skin Types: Oily, Combination\n- Key Ingredients: Vitamin C, Hyaluronic Acid\n- Benefits: Brightening, Fades dark spots\n- Usage: Morning application before sunscreen\n- Side Effects: Mild tingling for sensitive skin\n- Price: ₹699"
+      "category": "usage",
+      "question": "How often should this product be applied?",
+      "answer": "Apply 2–3 drops in the morning before sunscreen"
+    },
+    {
+      "category": "safety",
+      "question": "Is this product safe to use?",
+      "answer": "The product is generally safe to use. However, mild tingling for sensitive skin."
+    },
+    {
+      "category": "safety",
+      "question": "Are there any side effects of this product?",
+      "answer": "The product is generally safe to use. However, mild tingling for sensitive skin."
+    },
+    {
+      "category": "safety",
+      "question": "Is this product suitable for sensitive skin?",
+      "answer": "The product is generally safe to use. However, mild tingling for sensitive skin."
+    },
+    {
+      "category": "ingredients",
+      "question": "What ingredients are used in this product?",
+      "answer": "The key ingredients in this product are Vitamin C, Hyaluronic Acid."
+    },
+    {
+      "category": "ingredients",
+      "question": "What role do the ingredients in this product play?",
+      "answer": "The key ingredients in this product are Vitamin C, Hyaluronic Acid."
+    },
+    {
+      "category": "ingredients",
+      "question": "Does this product contain active ingredients?",
+      "answer": "The key ingredients in this product are Vitamin C, Hyaluronic Acid."
+    },
+    {
+      "category": "pricing",
+      "question": "What is the price of this product?",
+      "answer": "The price of the product is 699."
+    },
+    {
+      "category": "pricing",
+      "question": "Is this product affordable?",
+      "answer": "The price of the product is 699."
+    },
+    {
+      "category": "pricing",
+      "question": "Does this product offer good value for money?",
+      "answer": "The price of the product is 699."
+    },
+    {
+      "category": "comparison",
+      "question": "How does this product compare to similar products?",
+      "answer": "A direct comparison cannot be made because details of other products are not available. This product contains 10% Vitamin C Vitamin C and is priced at 699."
+    },
+    {
+      "category": "comparison",
+      "question": "Is this product better than alternatives?",
+      "answer": "A direct comparison cannot be made because details of other products are not available. This product contains 10% Vitamin C Vitamin C and is priced at 699."
+    },
+    {
+      "category": "comparison",
+      "question": "What makes this product different from competitors?",
+      "answer": "A direct comparison cannot be made because details of other products are not available. This product contains 10% Vitamin C Vitamin C and is priced at 699."
     }
   ]
 }

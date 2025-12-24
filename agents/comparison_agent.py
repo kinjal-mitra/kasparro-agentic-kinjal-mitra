@@ -8,10 +8,13 @@ class ComparisonAgent:
     """
 
     def compare(self, product_a: Dict, product_b: Dict) -> Dict:
+        name_a = product_a.get("product_name", "Product A")
+        name_b = product_b.get("product_name", "Product B")
+
         return {
             "products": {
-                "product_a": product_a["name"],
-                "product_b": product_b["name"],
+                "product_a": name_a,
+                "product_b": name_b,
             },
             "price_comparison": self._compare_price(product_a, product_b),
             "ingredients_comparison": self._compare_ingredients(
@@ -26,32 +29,56 @@ class ComparisonAgent:
     # -------------------------
     # Comparison Helpers
     # -------------------------
+
     def _compare_price(self, a: Dict, b: Dict) -> Dict:
+        name_a = a.get("product_name", "Product A")
+        name_b = b.get("product_name", "Product B")
+
+        price_a = a.get("price")
+        price_b = b.get("price")
+
+        cheaper = None
+        if isinstance(price_a, (int, float)) and isinstance(price_b, (int, float)):
+            cheaper = name_a if price_a < price_b else name_b
+
         return {
-            a["name"]: a["price"],
-            b["name"]: b["price"],
-            "cheaper_option": (
-                a["name"] if a["price"] < b["price"] else b["name"]
-            ),
+            name_a: price_a,
+            name_b: price_b,
+            "cheaper_option": cheaper,
         }
 
     def _compare_ingredients(self, a: Dict, b: Dict) -> Dict:
+        name_a = a.get("product_name", "Product A")
+        name_b = b.get("product_name", "Product B")
+
+        ingredients_a = a.get("key_ingredients", [])
+        ingredients_b = b.get("key_ingredients", [])
+
         return {
-            a["name"]: a["ingredients"],
-            b["name"]: b["ingredients"],
+            name_a: ingredients_a,
+            name_b: ingredients_b,
             "common_ingredients": list(
-                set(a["ingredients"]).intersection(set(b["ingredients"]))
+                set(ingredients_a).intersection(set(ingredients_b))
             ),
         }
 
     def _compare_benefits(self, a: Dict, b: Dict) -> Dict:
+        name_a = a.get("product_name", "Product A")
+        name_b = b.get("product_name", "Product B")
+
         return {
-            a["name"]: a["benefits"],
-            b["name"]: b["benefits"],
+            name_a: a.get("benefits", []),
+            name_b: b.get("benefits", []),
         }
 
     def _comparison_summary(self, a: Dict, b: Dict) -> str:
+        name_a = a.get("product_name", "Product A")
+        name_b = b.get("product_name", "Product B")
+
+        benefits_a = ", ".join(a.get("benefits", []))
+        benefits_b = ", ".join(b.get("benefits", []))
+
         return (
-            f"{a['name']} focuses on {', '.join(a['benefits'])}, "
-            f"while {b['name']} offers {', '.join(b['benefits'])}."
+            f"{name_a} focuses on {benefits_a}, "
+            f"while {name_b} offers {benefits_b}."
         )

@@ -16,56 +16,108 @@ Outputs:
 """
 
 
+from typing import Dict, List
+
+
 class TemplateAgent:
-    def render(self, content_type: str, structured_blocks: dict) -> dict:
+    """
+    Template Agent
+
+    Responsibilities:
+    - Assemble final machine-readable JSON pages
+    - Apply page-level structure and metadata
+    - Remain completely content-agnostic
+
+    This agent:
+    - Does NOT generate questions
+    - Does NOT generate answers
+    - Does NOT apply business logic
+    """
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def build_faq_page(self, qa_items: List[Dict]) -> Dict:
         """
-        Entry point for rendering templates
+        Builds FAQ page JSON.
+
+        Input:
+        - qa_items: List[{ category, question, answer }]
+
+        Output:
+        - faq.json compatible structure
         """
-        if content_type == "product_page":
-            return self._render_product_page(structured_blocks)
 
-        if content_type == "faq":
-            return self._render_faq_page(structured_blocks)
+        self._validate_qa_items(qa_items)
 
-        if content_type == "comparison":
-            return self._render_comparison_page(structured_blocks)
-
-        raise ValueError(f"Unsupported content_type: {content_type}")
-
-    # -------------------------
-    # Product Page Template
-    # -------------------------
-    def _render_product_page(self, blocks: dict) -> dict:
-        return {
-            "page_type": "product_page",
-            "product_overview": blocks["overview"],
-            "ingredients_section": blocks["ingredients"],
-            "benefits_section": blocks["benefits"],
-            "usage_section": blocks["usage"],
-            "pricing_section": blocks["pricing"],
-            "safety_section": blocks["safety"],
-            "skin_type_section": blocks["skin_type"],
-        }
-
-    # -------------------------
-    # FAQ Page Template
-    # -------------------------
-    def _render_faq_page(self, blocks: dict) -> dict:
         return {
             "page_type": "faq",
-            "total_questions": blocks["faq_count"],
-            "questions": blocks["faqs"],
+            "total_questions": len(qa_items),
+            "questions": [
+                {
+                    "category": item["category"],
+                    "question": item["question"],
+                    "answer": item["answer"]
+                }
+                for item in qa_items
+            ]
         }
 
-    # -------------------------
-    # Comparison Page Template
-    # -------------------------
-    def _render_comparison_page(self, blocks: dict) -> dict:
+    def build_product_page(self, product_blocks: Dict) -> Dict:
+        """
+        Builds Product Description page JSON.
+
+        Input:
+        - product_blocks (dict): precomputed content blocks
+
+        Output:
+        - product_page.json structure
+        """
+
+        return {
+            "page_type": "product",
+            "content": product_blocks
+        }
+
+    def build_comparison_page(self, comparison_blocks: Dict) -> Dict:
+        """
+        Builds Comparison page JSON.
+
+        Input:
+        - comparison_blocks (dict)
+
+        Output:
+        - comparison_page.json structure
+        """
+
         return {
             "page_type": "comparison",
-            "products_compared": blocks["products"],
-            "price_comparison": blocks["price_comparison"],
-            "ingredients_comparison": blocks["ingredients_comparison"],
-            "benefits_comparison": blocks["benefits_comparison"],
-            "summary": blocks["summary"],
+            "comparison": comparison_blocks
         }
+
+    # ------------------------------------------------------------------
+    # Validation
+    # ------------------------------------------------------------------
+
+    def _validate_qa_items(self, qa_items: List[Dict]) -> None:
+        """
+        Ensures FAQ entries conform to required schema.
+        """
+
+        if not isinstance(qa_items, list):
+            raise ValueError("qa_items must be a list")
+
+        for item in qa_items:
+            if not isinstance(item, dict):
+                raise ValueError("Each QA item must be a dictionary")
+
+            for key in ("category", "question", "answer"):
+                if key not in item:
+                    raise ValueError(f"Missing key '{key}' in QA item")
+
+            if not isinstance(item["question"], str) or not item["question"].strip():
+                raise ValueError("Question must be a non-empty string")
+
+            if not isinstance(item["answer"], str) or not item["answer"].strip():
+                raise ValueError("Answer must be a non-empty string")
