@@ -1,13 +1,13 @@
 import json
 from pathlib import Path
 
-from pipeline import Orchestrator
+from pipeline import Pipeline
 
 
 
 def load_product_data() -> dict:
     """
-    Loads product_data.json using pathlib (OS-agnostic).
+    Loads product_data.json using pathlib.
     """
     project_root = Path(__file__).resolve().parent
     input_path = project_root / "data" / "input" / "product_data.json"
@@ -27,8 +27,8 @@ def main() -> None:
     """
     raw_product_data = load_product_data()
 
-    orchestrator = Orchestrator(use_llm=True)
-    output_paths = orchestrator.run(raw_product_data)
+    pipeline = Pipeline(use_llm=True)
+    output_paths = pipeline.run(raw_product_data)
 
     print("\n✅ Pipeline executed successfully.\n")
     print("Generated files:")

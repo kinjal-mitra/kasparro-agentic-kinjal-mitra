@@ -19,7 +19,7 @@ Outputs:
 import json
 import os
 from typing import Dict
-
+from pathlib import Path
 
 class SerializationAgent:
     DEFAULT_OUTPUT_DIR = "data/output"
@@ -43,11 +43,12 @@ class SerializationAgent:
         if page_type not in self.FILE_MAP:
             raise ValueError(f"Unsupported page_type: {page_type}")
 
-        output_dir = output_dir or self.DEFAULT_OUTPUT_DIR
-        os.makedirs(output_dir, exist_ok=True)
+        output_dir = Path(output_dir or self.DEFAULT_OUTPUT_DIR)
+        output_dir.mkdir(parents=True, exist_ok=True)
 
-        file_name = self.FILE_MAP[page_type]
-        file_path = os.path.join(output_dir, file_name)
+        #file_name = self.FILE_MAP[page_type]
+        #file_path = os.path.join(output_dir, file_name)
+        file_path = output_dir / self.FILE_MAP[page_type]
 
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(page_content, f, indent=2, ensure_ascii=False)

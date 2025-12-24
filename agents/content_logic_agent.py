@@ -15,34 +15,22 @@ Inputs:
 Outputs:
 - structured dict blocks ready for template_agent
 """
-
-from typing import Dict, List, Optional
+from typing import Dict
 
 
 class ContentLogicAgent:
     def __init__(self, llm_client=None):
-        """
-        llm_client (optional):
-        - Injected dependency
-        - Used only when natural language variation is needed
-        """
         self.llm_client = llm_client
 
     # -------------------------
     # Public Entry Point
     # -------------------------
     def generate(self, content_type: str, payload: Dict) -> Dict:
-        """
-        Routes content generation based on content_type
-        """
         if content_type == "product_page":
             return self._product_page_blocks(payload)
 
         if content_type == "faq":
             return self._faq_blocks(payload)
-
-        if content_type == "comparison":
-            return self._comparison_blocks(payload)
 
         raise ValueError(f"Unsupported content_type: {content_type}")
 
@@ -110,23 +98,14 @@ class ContentLogicAgent:
     # FAQ Logic
     # -------------------------
     def _faq_blocks(self, payload: Dict) -> Dict:
-        """
-        payload expects:
-        - product (dict)
-        - questions (List[Dict])
-        """
         product = payload["product"]
         questions = payload["questions"]
 
         faqs = []
 
         for q in questions:
-            # --- normalize question input ---
             if isinstance(q, str):
-                question_obj = {
-                    "question": q,
-                    "category": "general",
-                }
+                question_obj = {"question": q, "category": "general"}
             elif isinstance(q, dict):
                 question_obj = q
             else:
@@ -146,11 +125,6 @@ class ContentLogicAgent:
         }
 
     def _generate_answer(self, product: Dict, question: Dict) -> str:
-        """
-        Deterministic first.
-        LLM used only if injected.
-        """
-
         category = question["category"].lower()
 
         if category == "usage":
@@ -176,56 +150,3 @@ class ContentLogicAgent:
             return self.llm_client.generate(prompt)
 
         return "Information available on the product page."
-
-    # -------------------------
-    # Comparison Logic
-    # -------------------------
-    def _comparison_blocks(self, payload: Dict) -> Dict:
-        """
-        payload expects:
-        - product_a (dict)
-        - product_b (dict)
-        """
-        a = payload["product_a"]
-        b = payload["product_b"]
-
-        return {
-            "products": {
-                "product_a": a["name"],
-                "product_b": b["name"],
-            },
-            "price_comparison": self._compare_price(a, b),
-            "ingredients_comparison": self._compare_ingredients(a, b),
-            "benefits_comparison": self._compare_benefits(a, b),
-            "summary": self._comparison_summary(a, b),
-        }
-
-    def _compare_price(self, a: Dict, b: Dict) -> Dict:
-        return {
-            a["name"]: a["price"],
-            b["name"]: b["price"],
-            "cheaper_option": a["name"]
-            if a["price"] < b["price"]
-            else b["name"],
-        }
-
-    def _compare_ingredients(self, a: Dict, b: Dict) -> Dict:
-        return {
-            a["name"]: a["ingredients"],
-            b["name"]: b["ingredients"],
-            "common_ingredients": list(
-                set(a["ingredients"]).intersection(set(b["ingredients"]))
-            ),
-        }
-
-    def _compare_benefits(self, a: Dict, b: Dict) -> Dict:
-        return {
-            a["name"]: a["benefits"],
-            b["name"]: b["benefits"],
-        }
-
-    def _comparison_summary(self, a: Dict, b: Dict) -> str:
-        return (
-            f"{a['name']} focuses on {', '.join(a['benefits'])}, "
-            f"while {b['name']} offers {', '.join(b['benefits'])}."
-        )

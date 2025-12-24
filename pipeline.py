@@ -12,74 +12,37 @@ This Pipeline Module:
 - Does NOT do templating
 - Delegates persistence to SerializationAgent
 """
-
 from agents.parser_agent import ParserAgent
 from agents.question_generation_agent import QuestionGenerationAgent
 from agents.content_logic_agent import ContentLogicAgent
 from agents.template_agent import TemplateAgent
 from agents.serialization_agent import SerializationAgent
+from agents.comparison_agent import ComparisonAgent
 
-# Optional LLM client (shared dependency)
 from llm.llm_client import LLMClient
 
 
-class Orchestrator:
+class Pipeline:
     def __init__(self, use_llm: bool = True):
-        """
-        Initialize shared dependencies and agents.
-
-        Args:
-            use_llm (bool): Whether to enable LLM-backed agents
-        """
-
-        # -------------------------
-        # Shared Dependencies
-        # -------------------------
         self.llm_client = LLMClient() if use_llm else None
 
-        # -------------------------
-        # Agents (pure & injected)
-        # -------------------------
         self.parser_agent = ParserAgent()
-
         self.question_agent = QuestionGenerationAgent(
             llm_client=self.llm_client
         )
-
         self.content_logic_agent = ContentLogicAgent(
             llm_client=self.llm_client
         )
+        self.comparison_agent = ComparisonAgent()
 
         self.template_agent = TemplateAgent()
         self.serialization_agent = SerializationAgent()
 
-    # -------------------------
-    # Pipeline Execution
-    # -------------------------
     def run(self, raw_product_data: dict) -> dict:
-        """
-        Executes the full agentic pipeline.
-
-        Args:
-            raw_product_data (dict): Raw product input data
-
-        Returns:
-            dict: Mapping of page_type -> output file path
-        """
-
-        # -------------------------
-        # Step 1: Parse & normalize
-        # -------------------------
         normalized_product = self.parser_agent.parse(raw_product_data)
 
-        # -------------------------
-        # Step 2: Generate questions
-        # -------------------------
         questions = self.question_agent.generate(normalized_product)
 
-        # -------------------------
-        # Step 3: Generate content blocks
-        # -------------------------
         product_blocks = self.content_logic_agent.generate(
             content_type="product_page",
             payload=normalized_product,
@@ -93,17 +56,11 @@ class Orchestrator:
             },
         )
 
-        comparison_blocks = self.content_logic_agent.generate(
-            content_type="comparison",
-            payload={
-                "product_a": normalized_product,
-                "product_b": self._build_fictional_product(),
-            },
+        comparison_blocks = self.comparison_agent.compare(
+            product_a=normalized_product,
+            product_b=self._build_fictional_product(),
         )
 
-        # -------------------------
-        # Step 4: Render templates
-        # -------------------------
         product_page = self.template_agent.render(
             content_type="product_page",
             structured_blocks=product_blocks,
@@ -119,9 +76,6 @@ class Orchestrator:
             structured_blocks=comparison_blocks,
         )
 
-        # -------------------------
-        # Step 5: Serialize outputs
-        # -------------------------
         return {
             "product_page": self.serialization_agent.serialize(
                 page_type="product_page",
@@ -137,14 +91,7 @@ class Orchestrator:
             ),
         }
 
-    # -------------------------
-    # Internal Helpers
-    # -------------------------
     def _build_fictional_product(self) -> dict:
-        """
-        Creates a deterministic fictional product
-        for comparison purposes.
-        """
         return {
             "name": "RadiantPlus Vitamin C Serum",
             "concentration": "8% Vitamin C",
