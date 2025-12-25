@@ -20,17 +20,52 @@ All outputs are generated as **clean JSON files**.
 ---
 ## 🚀 How to Run
 
-1. Place product data in:
-   ```
-    data/input/product_data.json
+1. Clone the Repository
 
-2. Run:
-   ```
-    python runner.py
+```bash
+git clone https://github.com/kinjal-mitra/kasparro-agentic-kinjal-mitra.git
+cd kasparro-agentic-kinjal-mitra
+```
+
+2. Create Virtual Environment
+
+```bash
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# Linux/Mac
+python3 -m venv venv
+source venv/bin/activate
+```
+
+3. Install Dependencies. Install from requirements file:
+
+```bash
+pip install -r requirements.txt
+```
+
+
+4. Place product data in:
+```bash
+data/input/product_data.json
+```
+
+5. Set environment variables in .env file
+```bash
+ANTHROPIC_API_KEY = "<Your Anthropic API Key>"
+GROQ_API_KEY = "<Your Groq API Key>" 
+```
+
+6. Run:
+```bash
+python runner.py
+```
   
-3. Outputs will be written to:
-   ```
-    data/output/
+7. Outputs will be written to:
+```bash
+data/output/
+```
    
 
 ---
