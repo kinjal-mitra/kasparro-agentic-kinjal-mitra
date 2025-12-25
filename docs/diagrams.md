@@ -1,4 +1,4 @@
-# System Diagrams (Mermaid)
+# System Diagrams
 
 ## Orchestration DAG
 
