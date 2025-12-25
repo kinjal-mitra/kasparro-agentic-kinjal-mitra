@@ -85,6 +85,13 @@ The Large Language Model (LLM) is used **only where reasoning and natural langua
       +-----------+------------+
                   |
                   v
++------------------------+
+| ComparisonAgent        |
+| (LLM – Two Products,   |
+|         One field)     |
++-----------+------------+
+          |
+          v                  
 +--------------------------+
 |     TemplateAgent        |
 | (Structured JSON Pages)  |
@@ -164,7 +171,7 @@ JSON Object  -->  File on Disk
 
 **ComparisonAgent**
 ```
-Product A + Product B  -->  Comparison Blocks
+Facts + Product Data (Real + Fictitous)  -->  Natural Language Answer (Comparison Block)
 ```
 
 ---

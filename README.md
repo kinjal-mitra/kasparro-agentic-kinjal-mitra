@@ -1,8 +1,8 @@
-# Kasparro – Multi-Agent Content Generation System
+# Kasparro – Agentic Content Generation System
 
-This repository implements a **modular, agentic automation system** that transforms structured product data into fully generated, machine-readable content pages.
+This repository implements a **multi-agent, modular content generation pipeline** built as part of the **Kasparro – Applied AI Engineer Challenge**.
 
-The system is designed as part of the **Kasparro – Applied AI Engineer Challenge**, with a strong emphasis on **agent boundaries, orchestration, and extensibility** rather than prompt engineering or copywriting.
+The system ingests a small, structured product dataset and autonomously generates multiple **machine-readable content pages** (FAQ, Product Page, Comparison Page) using agent orchestration, reusable logic blocks, and template-driven assembly.
 
 ---
 
@@ -34,20 +34,24 @@ This is a **systems design challenge**, not a content-writing exercise.
 ## 🧩 High-Level Architecture
 
 ```
-ParserAgent
-   ↓
-QuestionGenerationAgent
-   ↓
-ContentLogicAgent  (facts only)
-   ↓
-AnswerGenerationAgent (LLM)
-   ↓
-TemplateAgent
-   ↓
-SerializationAgent
-```
-
-Comparison logic runs in parallel using a dedicated `ComparisonAgent`.
+Raw Product Data
+      ↓
+ Parser Agent
+      ↓
+Normalized Internal Product Model
+      ↓
++----------------------------+
+| Question Generation Agent  |
+| Content Logic Agent        |
+| Comparison Agent           |
+| Answer Generation Agent    |
++----------------------------+
+      ↓
+ Template Agent
+      ↓
+ Serialization Agent
+      ↓
+ JSON Outputs
 
 ---
 
@@ -61,6 +65,9 @@ Comparison logic runs in parallel using a dedicated `ComparisonAgent`.
 
 - **ContentLogicAgent**  
   Extracts structured, category-specific factual context from product data.
+
+- **Comparison Agent**
+  Compares the given product and a fictitious product using a LLM.
 
 - **AnswerGenerationAgent**  
   Uses the LLM to generate a **unique answer per question**, grounded strictly in provided data.
