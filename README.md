@@ -69,11 +69,11 @@ data/output/
    
 
 ---
-```bash
+
 
 ## 🧩 High-Level Architecture
 
-
+```bash
 Raw Product Data
       ↓
  Parser Agent
