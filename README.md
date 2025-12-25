@@ -19,18 +19,6 @@ All outputs are generated as **clean JSON files**.
 
 ---
 
-## 🧠 Core Design Principles
-
-- **Single-responsibility agents**
-- **Explicit input/output contracts**
-- **LLM usage isolated to one agent**
-- **No hidden global state**
-- **Deterministic + extensible workflow**
-
-This is a **systems design challenge**, not a content-writing exercise.
-
----
-
 ## 🧩 High-Level Architecture
 
 ```
