@@ -54,7 +54,7 @@ class SerializationAgent:
         """
         Writes comparison_page.json
         """
-        print("Writing comparison_page.json")
+        #print("Writing comparison_page.json")
         self._write_json(
             data=comparison_page,
             filename="comparison_page.json"

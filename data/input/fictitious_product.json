@@ -1,0 +1,18 @@
+{
+  "product_name": "RadiancePlus Vitamin C Serum",
+  "concentration": "15% Vitamin C",
+  "skin_type": ["Normal", "Dry"],
+  "key_ingredients": [
+    "Vitamin C",
+    "Niacinamide",
+    "Ferulic Acid"
+  ],
+  "benefits": [
+    "Brightening",
+    "Improves skin texture",
+    "Reduces fine lines"
+  ],
+  "how_to_use": "Apply 2–3 drops at night after cleansing and before moisturizer",
+  "side_effects": "May cause mild dryness or redness for sensitive skin",
+  "price": "₹899"
+}

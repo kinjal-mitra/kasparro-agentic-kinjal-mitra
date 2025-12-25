@@ -8,6 +8,7 @@ from agents.template_agent import TemplateAgent
 from agents.serialization_agent import SerializationAgent
 from agents.comparison_agent import ComparisonAgent
 from agents.answer_generation_agent import AnswerGenerationAgent
+
 from llm.llm_client import LLMClient
 from pipeline import Pipeline
 
@@ -25,31 +26,36 @@ def load_json(path: Path) -> dict:
 
 def main():
     # ------------------------------------------------------------------
-    # Resolve paths using pathlib
+    # Resolve paths
     # ------------------------------------------------------------------
     project_root = Path(__file__).resolve().parent
     data_dir = project_root / "data"
 
-    input_path = data_dir / "input" / "product_data.json"
+    input_dir = data_dir / "input"
     output_dir = data_dir / "output"
 
+    product_a_path = input_dir / "product_data.json"
+    product_b_path = input_dir / "fictitious_product.json"
+
     # ------------------------------------------------------------------
-    # Load raw product data
+    # Load raw input data
     # ------------------------------------------------------------------
-    raw_product_data = load_json(input_path)
+    raw_product_data = load_json(product_a_path)
+    raw_fictitious_product_data = load_json(product_b_path)
 
     # ------------------------------------------------------------------
     # Instantiate agents
     # ------------------------------------------------------------------
     llm_client = LLMClient()
+
     parser_agent = ParserAgent()
     question_agent = QuestionGenerationAgent()
     content_logic_agent = ContentLogicAgent()
     template_agent = TemplateAgent()
-    print("Writing comparison_page.json to:", output_dir.resolve())
-    serialization_agent = SerializationAgent(output_dir=output_dir)
     comparison_agent = ComparisonAgent()
     answer_generation_agent = AnswerGenerationAgent(llm_client)
+
+    serialization_agent = SerializationAgent(output_dir=output_dir)
 
     # ------------------------------------------------------------------
     # Build pipeline
@@ -66,10 +72,14 @@ def main():
     # ------------------------------------------------------------------
     # Run pipeline
     # ------------------------------------------------------------------
-    pages = pipeline.run(raw_product_data)
-    """ Debug prints to verify content"""
-    print("\n[DEBUG] comparison_page keys:",
-      pages["comparison_page"].keys())
+    pages = pipeline.run(
+        raw_product_data=raw_product_data,
+        raw_comparison_product_data=raw_fictitious_product_data
+    )
+
+    # Debug verification
+    #print("\n[DEBUG] Generated pages:", pages.keys())
+    #print("[DEBUG] comparison_page keys:", pages["comparison_page"].keys())
 
     # ------------------------------------------------------------------
     # Serialize outputs
@@ -78,7 +88,7 @@ def main():
     serialization_agent.write_product_page(pages["product_page"])
     serialization_agent.write_comparison_page(pages["comparison_page"])
 
-    print(" Content generation pipeline completed successfully.")
+    print("\n Content generation pipeline completed successfully.")
 
 
 if __name__ == "__main__":
