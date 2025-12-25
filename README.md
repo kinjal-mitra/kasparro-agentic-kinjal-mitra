@@ -18,10 +18,27 @@ The system produces:
 All outputs are generated as **clean JSON files**.
 
 ---
+## 🚀 How to Run
+
+1. Place product data in:
+   ```
+    data/input/product_data.json
+
+2. Run:
+   ```
+    python runner.py
+  
+3. Outputs will be written to:
+   ```
+    data/output/
+   
+
+---
+```bash
 
 ## 🧩 High-Level Architecture
 
-```
+
 Raw Product Data
       ↓
  Parser Agent
@@ -40,7 +57,7 @@ Normalized Internal Product Model
  Serialization Agent
       ↓
  JSON Outputs
-
+```
 ---
 
 ## 🤖 Key Agents
@@ -79,25 +96,5 @@ Each file is structured, deterministic, and suitable for downstream systems.
 
 ---
 
-## 🚀 How to Run
 
-1. Place product data in:
-   ```
-   data/input/product_data.json
-   ```
 
-2. Run:
-   ```bash
-   python runner.py
-   ```
-
-3. Outputs will be written to:
-   ```
-   data/output/
-   ```
-
----
-
-## 🧠 Final Note
-
-This repository prioritizes **engineering clarity and system correctness** over surface-level content quality — exactly as expected in real-world agentic systems.
