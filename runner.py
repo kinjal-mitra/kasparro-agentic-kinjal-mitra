@@ -25,7 +25,7 @@ def load_json(path: Path) -> dict:
 
 def main():
     # ------------------------------------------------------------------
-    # Resolve paths 
+    # Resolve paths using pathlib
     # ------------------------------------------------------------------
     project_root = Path(__file__).resolve().parent
     data_dir = project_root / "data"
@@ -46,6 +46,7 @@ def main():
     question_agent = QuestionGenerationAgent()
     content_logic_agent = ContentLogicAgent()
     template_agent = TemplateAgent()
+    print("Writing comparison_page.json to:", output_dir.resolve())
     serialization_agent = SerializationAgent(output_dir=output_dir)
     comparison_agent = ComparisonAgent()
     answer_generation_agent = AnswerGenerationAgent(llm_client)
@@ -66,15 +67,16 @@ def main():
     # Run pipeline
     # ------------------------------------------------------------------
     pages = pipeline.run(raw_product_data)
+    """ Debug prints to verify content"""
+    print("\n[DEBUG] comparison_page keys:",
+      pages["comparison_page"].keys())
 
     # ------------------------------------------------------------------
     # Serialize outputs
     # ------------------------------------------------------------------
     serialization_agent.write_faq_page(pages["faq_page"])
-
-    # (Optional future extensions)
-    # serialization_agent.write_product_page(pages["product_page"])
-    # serialization_agent.write_comparison_page(pages["comparison_page"])
+    serialization_agent.write_product_page(pages["product_page"])
+    serialization_agent.write_comparison_page(pages["comparison_page"])
 
     print(" Content generation pipeline completed successfully.")
 

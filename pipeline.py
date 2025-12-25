@@ -74,9 +74,12 @@ class Pipeline:
 
         faq_page = self.template_agent.build_faq_page(faq_items)
 
+        fictional_product = self._build_fictional_product()
+        normalized_fictional_product = self.parser_agent.parse(fictional_product)
+
         comparison_blocks = self.comparison_agent.compare(
             product_a=normalized_product,
-            product_b=self._build_fictional_product()
+            product_b=normalized_fictional_product
         )
 
         comparison_page = self.template_agent.build_comparison_page(
@@ -95,13 +98,14 @@ class Pipeline:
 
     def _build_fictional_product(self) -> dict:
         return {
-            "product_name": "RadiantPlus Vitamin C Serum",
-            "concentration": "8% Vitamin C",
-            "skin_type": ["Dry", "Normal"],
-            "key_ingredients": ["Vitamin C", "Niacinamide"],
-            "benefits": ["Hydration", "Glow"],
-            "how_to_use": "Apply at night after cleansing",
-            "price": 799,
-        }
+        "product_name": "RadiantPlus Vitamin C Serum",
+        "concentration": "8% Vitamin C",
+        "skin_type": ["Dry", "Normal"],
+        "key_ingredients": ["Vitamin C", "Niacinamide"],
+        "benefits": ["Hydration", "Glow"],
+        "how_to_use": "Apply at night after cleansing",
+        "side_effects": "May cause mild dryness for sensitive skin",
+        "price": 799
+    }
 
 

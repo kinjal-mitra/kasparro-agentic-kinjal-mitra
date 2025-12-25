@@ -1,36 +1,58 @@
 {
   "page_type": "comparison",
-  "products_compared": {
-    "product_a": "GlowBoost Vitamin C Serum",
-    "product_b": "RadiantPlus Vitamin C Serum"
-  },
-  "price_comparison": {
-    "GlowBoost Vitamin C Serum": 699,
-    "RadiantPlus Vitamin C Serum": 799,
-    "cheaper_option": "GlowBoost Vitamin C Serum"
-  },
-  "ingredients_comparison": {
-    "GlowBoost Vitamin C Serum": [
-      "Vitamin C",
-      "Hyaluronic Acid"
-    ],
-    "RadiantPlus Vitamin C Serum": [
-      "Vitamin C",
-      "Niacinamide"
-    ],
-    "common_ingredients": [
-      "Vitamin C"
-    ]
-  },
-  "benefits_comparison": {
-    "GlowBoost Vitamin C Serum": [
-      "Brightening",
-      "Fades dark spots"
-    ],
-    "RadiantPlus Vitamin C Serum": [
-      "Hydration",
-      "Glow"
-    ]
-  },
-  "summary": "GlowBoost Vitamin C Serum focuses on Brightening, Fades dark spots, while RadiantPlus Vitamin C Serum offers Hydration, Glow."
+  "comparison": {
+    "products": {
+      "product_a": "GlowBoost Vitamin C Serum",
+      "product_b": "RadiantPlus Vitamin C Serum"
+    },
+    "price_comparison": {
+      "GlowBoost Vitamin C Serum": 699,
+      "RadiantPlus Vitamin C Serum": 799,
+      "cheaper_option": "GlowBoost Vitamin C Serum"
+    },
+    "ingredients_comparison": {
+      "GlowBoost Vitamin C Serum": [
+        "Vitamin C",
+        "Hyaluronic Acid"
+      ],
+      "RadiantPlus Vitamin C Serum": [
+        "Vitamin C",
+        "Niacinamide"
+      ],
+      "verdict": "The GlowBoost Vitamin C Serum focuses on hydration with Hyaluronic Acid, while the RadiantPlus Vitamin C Serum emphasizes skin brightness and tone with Niacinamide. Both serums share Vitamin C as a key ingredient, but differ in their secondary ingredient strategy."
+    },
+    "benefits_comparison": {
+      "GlowBoost Vitamin C Serum": [
+        "Brightening",
+        "Fades dark spots"
+      ],
+      "RadiantPlus Vitamin C Serum": [
+        "Hydration",
+        "Glow"
+      ],
+      "verdict": "GlowBoost Vitamin C Serum provides benefits of brightening and fading dark spots, whereas RadiantPlus Vitamin C Serum offers hydration and a glowing complexion. The two serums have distinct user-visible benefits, with GlowBoost focusing on spot correction and RadiantPlus on overall skin radiance."
+    },
+    "skin_type_comparison": {
+      "GlowBoost Vitamin C Serum": [
+        "Oily",
+        "Combination"
+      ],
+      "RadiantPlus Vitamin C Serum": [
+        "Dry",
+        "Normal"
+      ],
+      "verdict": "GlowBoost Vitamin C Serum is suitable for oily and combination skin types, whereas RadiantPlus Vitamin C Serum is suitable for dry and normal skin types. This suggests that GlowBoost is better for skin with excess oil, while RadiantPlus is more suitable for skin that needs hydration."
+    },
+    "usage_comparison": {
+      "GlowBoost Vitamin C Serum": "Apply 2–3 drops in the morning before sunscreen",
+      "RadiantPlus Vitamin C Serum": "Apply at night after cleansing",
+      "verdict": "GlowBoost Vitamin C Serum is more compatible with a daily morning routine, as it is applied before sunscreen, whereas RadiantPlus Vitamin C Serum is more suited for a nighttime routine, as it is applied after cleansing. GlowBoost is easier to use in a daily routine for those who prefer a morning skincare routine."
+    },
+    "side_effects_comparison": {
+      "GlowBoost Vitamin C Serum": "Mild tingling for sensitive skin",
+      "RadiantPlus Vitamin C Serum": "May cause mild dryness for sensitive skin",
+      "verdict": "GlowBoost Vitamin C Serum may cause mild tingling in sensitive skin, while RadiantPlus Vitamin C Serum may cause mild dryness in sensitive skin. Both products have similar tolerability, with potential risks limited to mild reactions in sensitive skin types."
+    },
+    "summary": "Product A suits oily to combination skin types, offering brightening and dark spot fading benefits, while Product B is geared towards dry to normal skin, providing hydration and glow. The key difference lies in their concentrations, skin type suitability, and ingredients. Product A is also more affordable, priced at 699 compared to Product B's 799."
+  }
 }

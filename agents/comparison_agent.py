@@ -1,41 +1,93 @@
-from typing import Dict, List
+from typing import Dict, Any
+
+from llm.comparison_llm import ComparisonClient
+from logic_blocks.comparison_block import (
+    build_field_comparison_prompt,
+    build_overall_summary_prompt
+)
 
 
 class ComparisonAgent:
     """
-    Compares two normalized product objects and produces
-    a structured comparison dictionary.
+    Compares two normalized products using:
+    - Deterministic price comparison
+    - Field-wise LLM comparisons with verdicts
+    - One final overall LLM summary
+
+    IMPORTANT:
+    This agent assumes BOTH products are already normalized
+    by ParserAgent.
     """
 
-    def compare(self, product_a: Dict, product_b: Dict) -> Dict:
-        name_a = product_a.get("product_name", "Product A")
-        name_b = product_b.get("product_name", "Product B")
+    LLM_FIELDS = {
+        "ingredients_comparison": "ingredients",
+        "benefits_comparison": "benefits",
+        "skin_type_comparison": "skin_type",
+        "usage_comparison": "usage",
+        "side_effects_comparison": "side_effects"
+    }
 
-        return {
+    def __init__(self):
+        self.llm = ComparisonClient()
+
+    # ------------------------------------------------------------------
+    # Public API
+    # ------------------------------------------------------------------
+
+    def compare(self, product_a: Dict, product_b: Dict) -> Dict:
+        name_a = product_a.get("name")
+        name_b = product_b.get("name")
+
+        if not name_a or not name_b:
+            raise ValueError(
+                "ComparisonAgent requires normalized products with 'name' field"
+            )
+
+        output = {
             "products": {
                 "product_a": name_a,
-                "product_b": name_b,
+                "product_b": name_b
             },
-            "price_comparison": self._compare_price(product_a, product_b),
-            "ingredients_comparison": self._compare_ingredients(
-                product_a, product_b
-            ),
-            "benefits_comparison": self._compare_benefits(
-                product_a, product_b
-            ),
-            "summary": self._comparison_summary(product_a, product_b),
+            "price_comparison": self._compare_price(product_a, product_b)
         }
 
-    # -------------------------
-    # Comparison Helpers
-    # -------------------------
+        # Field-wise LLM comparisons
+        for section_name, field in self.LLM_FIELDS.items():
+            output[section_name] = self._compare_field(
+                section_name=section_name,
+                field=field,
+                product_a=product_a,
+                product_b=product_b
+            )
+
+        # Overall summary
+        output["summary"] = self._generate_overall_summary(
+            product_a, product_b
+        )
+
+        return output
+
+    # ------------------------------------------------------------------
+    # Price Comparison (Deterministic)
+    # ------------------------------------------------------------------
+
+    def _extract_price_amount(self, product: Dict) -> Any:
+        """
+        Extracts numeric price amount from normalized product.
+        """
+        price = product.get("price")
+
+        if isinstance(price, dict):
+            return price.get("amount")
+
+        return price
 
     def _compare_price(self, a: Dict, b: Dict) -> Dict:
-        name_a = a.get("product_name", "Product A")
-        name_b = b.get("product_name", "Product B")
+        name_a = a["name"]
+        name_b = b["name"]
 
-        price_a = a.get("price")
-        price_b = b.get("price")
+        price_a = self._extract_price_amount(a)
+        price_b = self._extract_price_amount(b)
 
         cheaper = None
         if isinstance(price_a, (int, float)) and isinstance(price_b, (int, float)):
@@ -44,41 +96,58 @@ class ComparisonAgent:
         return {
             name_a: price_a,
             name_b: price_b,
-            "cheaper_option": cheaper,
+            "cheaper_option": cheaper
         }
 
-    def _compare_ingredients(self, a: Dict, b: Dict) -> Dict:
-        name_a = a.get("product_name", "Product A")
-        name_b = b.get("product_name", "Product B")
+    # ------------------------------------------------------------------
+    # Field Comparison (LLM-powered)
+    # ------------------------------------------------------------------
 
-        ingredients_a = a.get("key_ingredients", [])
-        ingredients_b = b.get("key_ingredients", [])
+    def _compare_field(
+        self,
+        section_name: str,
+        field: str,
+        product_a: Dict,
+        product_b: Dict
+    ) -> Dict:
+        name_a = product_a["name"]
+        name_b = product_b["name"]
 
-        return {
-            name_a: ingredients_a,
-            name_b: ingredients_b,
-            "common_ingredients": list(
-                set(ingredients_a).intersection(set(ingredients_b))
-            ),
-        }
+        values_a = product_a.get(field)
+        values_b = product_b.get(field)
 
-    def _compare_benefits(self, a: Dict, b: Dict) -> Dict:
-        name_a = a.get("product_name", "Product A")
-        name_b = b.get("product_name", "Product B")
+        # Normalize empty values explicitly
+        values_a = values_a if values_a is not None else []
+        values_b = values_b if values_b is not None else []
 
-        return {
-            name_a: a.get("benefits", []),
-            name_b: b.get("benefits", []),
-        }
-
-    def _comparison_summary(self, a: Dict, b: Dict) -> str:
-        name_a = a.get("product_name", "Product A")
-        name_b = b.get("product_name", "Product B")
-
-        benefits_a = ", ".join(a.get("benefits", []))
-        benefits_b = ", ".join(b.get("benefits", []))
-
-        return (
-            f"{name_a} focuses on {benefits_a}, "
-            f"while {name_b} offers {benefits_b}."
+        prompt = build_field_comparison_prompt(
+            section_name=section_name,
+            field=field,
+            name_a=name_a,
+            name_b=name_b,
+            values_a=values_a,
+            values_b=values_b
         )
+
+        verdict = self.llm.generate(prompt)
+
+        return {
+            name_a: values_a,
+            name_b: values_b,
+            "verdict": verdict
+        }
+
+    # ------------------------------------------------------------------
+    # Overall Summary (LLM-powered)
+    # ------------------------------------------------------------------
+
+    def _generate_overall_summary(
+        self,
+        product_a: Dict,
+        product_b: Dict
+    ) -> str:
+        prompt = build_overall_summary_prompt(
+            product_a, product_b
+        )
+
+        return self.llm.generate(prompt)
