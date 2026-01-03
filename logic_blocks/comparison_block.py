@@ -1,14 +1,5 @@
 # Comparison-specific logic and prompt block.
 
-
-"""
-Centralized prompt builders for product comparison.
-
-This module contains ONLY prompt construction logic.
-No LLM calls, no parsing.
-"""
-
-
 def build_field_comparison_prompt( section_name: str, field: str,name_a: str, name_b: str, values_a, values_b) -> str:
     """
     Builds a field-specific comparison prompt for Gemini.

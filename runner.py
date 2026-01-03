@@ -1,94 +1,62 @@
-import json
 from pathlib import Path
+import json
 
-from agents.parser_agent import ParserAgent
-from agents.question_generation_agent import QuestionGenerationAgent
-from agents.content_logic_agent import ContentLogicAgent
-from agents.template_agent import TemplateAgent
+from graph.graph import build_graph
+from graph.state import AgentState
 from agents.serialization_agent import SerializationAgent
-from agents.comparison_agent import ComparisonAgent
-from agents.answer_generation_agent import AnswerGenerationAgent
-
-from llm.llm_client import LLMClient
-from pipeline import Pipeline
 
 
 def load_json(path: Path) -> dict:
-    """
-    Load a JSON file safely from disk.
-    """
     if not path.exists():
         raise FileNotFoundError(f"Input file not found: {path}")
-
     with path.open("r", encoding="utf-8") as f:
         return json.load(f)
 
 
 def main():
-    # ------------------------------------------------------------------
-    # Resolve paths
-    # ------------------------------------------------------------------
     project_root = Path(__file__).resolve().parent
     data_dir = project_root / "data"
 
-    input_dir = data_dir / "input"
-    output_dir = data_dir / "output"
+    raw_product_a = load_json(data_dir / "input" / "product_data.json")
+    raw_product_b = load_json(data_dir / "input" / "fictitious_product.json")
 
-    product_a_path = input_dir / "product_data.json"
-    product_b_path = input_dir / "fictitious_product.json"
-
-    # ------------------------------------------------------------------
-    # Load raw input data
-    # ------------------------------------------------------------------
-    raw_product_data = load_json(product_a_path)
-    raw_fictitious_product_data = load_json(product_b_path)
-
-    # ------------------------------------------------------------------
-    # Instantiate agents
-    # ------------------------------------------------------------------
-    llm_client = LLMClient()
-
-    parser_agent = ParserAgent()
-    question_agent = QuestionGenerationAgent()
-    content_logic_agent = ContentLogicAgent()
-    template_agent = TemplateAgent()
-    comparison_agent = ComparisonAgent()
-    answer_generation_agent = AnswerGenerationAgent(llm_client)
-
-    serialization_agent = SerializationAgent(output_dir=output_dir)
-
-    # ------------------------------------------------------------------
-    # Build pipeline
-    # ------------------------------------------------------------------
-    pipeline = Pipeline(
-        parser_agent=parser_agent,
-        question_agent=question_agent,
-        content_logic_agent=content_logic_agent,
-        answer_generation_agent=answer_generation_agent,
-        template_agent=template_agent,
-        comparison_agent=comparison_agent
+    # -------------------------
+    # Initialize state
+    # -------------------------
+    initial_state = AgentState(
+        raw_product_a=raw_product_a,
+        raw_product_b=raw_product_b,
     )
 
-    # ------------------------------------------------------------------
-    # Run pipeline
-    # ------------------------------------------------------------------
-    pages = pipeline.run(
-        raw_product_data=raw_product_data,
-        raw_comparison_product_data=raw_fictitious_product_data
-    )
+    # -------------------------
+    # Run LangGraph
+    # -------------------------
+    graph = build_graph()
+    final_state = graph.invoke(initial_state)
 
-    # Debug verification
-    #print("\n[DEBUG] Generated pages:", pages.keys())
-    #print("[DEBUG] comparison_page keys:", pages["comparison_page"].keys())
+    # -------------------------
+    # Serialize outputs (post-graph)
+    # -------------------------
+    serializer = SerializationAgent(output_dir=data_dir / "output")
 
-    # ------------------------------------------------------------------
-    # Serialize outputs
-    # ------------------------------------------------------------------
-    serialization_agent.write_faq_page(pages["faq_page"])
-    serialization_agent.write_product_page(pages["product_page"])
-    serialization_agent.write_comparison_page(pages["comparison_page"])
+    serializer.write_faq_page(final_state["faq_page"])
+    serializer.write_product_page(final_state["product_page"])
+    serializer.write_comparison_page(final_state["comparison_page"])
 
-    print("\n Content generation pipeline completed successfully.")
+    # -------------------------
+    # Save execution log
+    # -------------------------
+    log_path = data_dir / "output" / "execution_log.txt"
+
+    with log_path.open("w", encoding="utf-8") as f:
+        for entry in final_state["execution_log"]:
+            f.write(entry + "\n")
+
+    print(f"\n Execution log saved to: {log_path}")
+
+
+
+    print("LangGraph pipeline executed successfully")
 
 
 if __name__ == "__main__":

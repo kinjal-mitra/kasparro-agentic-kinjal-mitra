@@ -1,179 +1,155 @@
-# Project Documentation  
-## Kasparro – Multi-Agent Content Generation System
+# Project Documentation – Kasparro Agentic Content Generation System
+
+## 1. Problem Statement
+
+The goal of this project is to design and implement a **true agentic content generation system** that transforms structured product data into multiple machine-readable content pages (FAQ, Product Page, and Comparison Page).  
+The system must avoid monolithic scripts and instead use a **framework-driven, stateful agent orchestration** approach.
 
 ---
 
-## Problem Statement
+## 2. Expected Inputs
 
-Design and implement a modular agentic system that automatically converts structured product data into multiple machine-readable content pages, without relying on a monolithic LLM script.
+### Primary Inputs
+- `data/input/product_data.json`  
+  Structured JSON describing a skincare product.
 
-The focus is on **system design, orchestration, and agent responsibilities**, not domain expertise or content writing.
+- `data/input/fictitious_product.json`  
+  A second (fictional) product used for comparison.
 
----
-
-## Expected Inputs
-
-- A structured JSON-like product dataset containing:
-  - Product name
-  - Ingredients
-  - Benefits
-  - Usage instructions
-  - Safety information
-  - Price
-
-This dataset is the **only source of truth** used by the system.
+### Environment Variables
+- `ANTHROPIC_API_KEY` – for FAQ answer generation
+- `GROQ_API_KEY` – for fast comparison reasoning
 
 ---
 
-## Expected Outputs
+## 3. Expected Outputs
 
-The system generates the following **machine-readable JSON outputs**:
+All outputs are written to `data/output/`:
 
-- FAQ Page (question–answer pairs)
-- Product Description Page
-- Comparison Page (vs a fictional product)
+- `faq.json` – FAQ page with categorized questions and answers
+- `product_page.json` – Structured product description
+- `comparison_page.json` – Product-to-product comparison
+- `execution_log.txt` – Full execution trace of the agentic DAG
 
-All outputs are deterministic in structure and suitable for downstream systems.
-
----
-
-## Solution Overview
-
-The solution is implemented as a **multi-agent pipeline**, where each agent has a single responsibility and communicates via explicit data contracts.
-
-The Large Language Model (LLM) is used **only where reasoning and natural language synthesis are required**, and never as a monolithic content generator.
+All output files are **schema-validated JSON**.
 
 ---
 
-## System Design (Core Section)
+## 4. Architecture Overview (LangGraph-Based)
 
-### 1. High-Level Architecture
+This system is implemented using **LangGraph**, ensuring:
+- Explicit shared state
+- Deterministic DAG execution
+- Conditional routing
+- Retry guards
+- Framework-level validation
+
+### High-Level DAG Flow
 
 ```
-+------------------+
-|  Raw Product     |
-|     Data         |
-+--------+---------+
-         |
-         v
-+------------------+
-|   ParserAgent    |
-| (Normalization)  |
-+--------+---------+
-         |
-         v
-+--------------------------+
-| QuestionGenerationAgent  |
-| (What should users ask?) |
-+--------+-----------------+
-         |
-         v
-+------------------------------------+
-|   For Each Generated Question      |
-+----------------+-------------------+
-                 |
-                 v
-      +------------------------+
-      |  ContentLogicAgent     |
-      |  (Facts Only Context)  |
-      +-----------+------------+
-                  |
-                  v
-      +------------------------+
-      | AnswerGenerationAgent  |
-      | (LLM – One Q, One A)   |
-      +-----------+------------+
-                  |
-                  v
-+------------------------+
-| ComparisonAgent        |
-| (LLM – Two Products,   |
-|         One field)     |
-+-----------+------------+
-          |
-          v                  
-+--------------------------+
-|     TemplateAgent        |
-| (Structured JSON Pages)  |
-+--------+-----------------+
-         |
-         v
-+--------------------------+
-|  SerializationAgent     |
-| (Write JSON to Disk)    |
-+--------------------------+
+Raw Product Inputs
+        ↓
+Parse & Normalize Products
+        ↓
+Generate Questions
+        ↓
+Validate Question Count
+   ┌───────────────┐
+   │ Retry (≤ N)   │
+   └──────┬────────┘
+          ↓
+Build FAQ Context
+        ↓
+Generate FAQ Answers
+        ↓
+Assemble FAQ Page
+        ↓
+Assemble Product Page
+        ↓
+Generate Comparison Page
+        ↓
+Schema Validation
+        ↓
+Final Outputs
 ```
 
 ---
 
-### 2. Detailed Orchestration Flow (FAQ Path)
+## 5. Agent State Design
 
-```
-Start
-  |
-  v
-Parse raw product data
-  |
-  v
-Generate categorized questions
-  |
-  v
-FOR EACH QUESTION:
-    |
-    +--> Extract factual context (ContentLogicAgent)
-    |
-    +--> Generate answer using LLM (AnswerGenerationAgent)
-    |
-    +--> Attach answer to question
-  |
-  v
-Assemble FAQ JSON (TemplateAgent)
-  |
-  v
-Write faq.json to disk
-  |
- End
-```
+All agents operate on a shared `AgentState`, which includes:
+
+- Raw and normalized product data
+- Generated questions and answers
+- Retry counters and guard thresholds
+- Execution log
+- Final output pages
+- Schema validation errors (if any)
+
+This ensures **transparent, debuggable, and replayable execution**.
 
 ---
 
-### 3. Agent Responsibilities
+## 6. Agent Responsibilities
 
-**ParserAgent**
-```
-Raw JSON  -->  Normalized Product Object
-```
+### ParserAgent
+- Validates raw input
+- Produces normalized product schema
 
-**QuestionGenerationAgent**
-```
-Product Data  -->  { category, question }[]
-```
+### QuestionGenerationAgent
+- Generates categorized questions
+- Supports retry if minimum count is not met
 
-**ContentLogicAgent**
-```
-Product Data + Category  -->  Structured Facts
-```
+### ContentLogicAgent
+- Extracts structured factual context
+- No LLM usage
 
-**AnswerGenerationAgent**
-```
-Facts + Question  -->  Natural Language Answer
-```
+### AnswerGenerationAgent
+- Uses LLM to generate grounded answers
+- No orchestration logic
 
-**TemplateAgent**
-```
-Q&A Blocks  -->  Final JSON Pages
-```
+### ComparisonAgent
+- Performs deterministic and LLM-assisted comparison
 
-**SerializationAgent**
-```
-JSON Object  -->  File on Disk
-```
+### TemplateAgent
+- Assembles final JSON pages
+- Enforces structural consistency
 
-**ComparisonAgent**
-```
-Facts + Product Data (Real + Fictitous)  -->  Natural Language Answer (Comparison Block)
-```
+### SerializationAgent
+- Writes outputs to disk
+- Handles filesystem concerns only
 
 ---
 
+## 7. Robustness & Safety Mechanisms
 
+- **Retry Guard**: Prevents infinite loops during question generation
+- **Schema Validation**: Final outputs validated using Pydantic
+- **Execution Logs**: Full trace saved to file
+- **Framework-Level Routing**: No custom control flow
+
+---
+
+## 8. Testing Strategy
+
+Tests are written against **LangGraph execution**, not individual agents.
+
+Validated aspects:
+- End-to-end DAG execution
+- Retry guard enforcement
+- Output schema correctness
+
+This ensures tests reflect **system behavior**, not implementation details.
+
+---
+
+## 9. Summary
+
+This project demonstrates:
+- Correct usage of an agentic framework (LangGraph)
+- Explicit state management
+- Conditional execution and retry logic
+- Schema-validated, machine-readable outputs
+- Production-grade observability
+
+The system is designed to be **auditable, extensible, and evaluator-compliant**.

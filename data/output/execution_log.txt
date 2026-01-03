@@ -1,0 +1,9 @@
+Products parsed successfully
+Generated 18 questions (attempt 1)
+FAQ count validated
+FAQ context built
+FAQ answers generated
+FAQ page assembled
+Product page assembled
+Comparison page generated
+All output schemas validated successfully
