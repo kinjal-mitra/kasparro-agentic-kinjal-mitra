@@ -1,91 +1,59 @@
 # System Diagrams – Kasparro Agentic Content Generation System
 
 This document describes the **LangGraph-based orchestration** used in the Kasparro Agentic Content Generation System.  
-All diagrams reflect the **current architecture**, which uses a **stateful DAG**, conditional routing, retry guards, and schema validation.
 
 ---
 
-## 1. High-Level LangGraph DAG
+## 1. High-Level LangGraph DAG 
 
 The system is orchestrated as a **directed acyclic graph (DAG)** managed entirely by LangGraph.  
 There is **no custom sequential orchestration** and no agent-to-agent control flow.
 
-```
-┌──────────────────────────┐
-│   Raw Product Inputs     │
-│ (Primary + Comparison)   │
-└─────────────┬────────────┘
-              ↓
-┌──────────────────────────┐
-│ Parse & Normalize Node   │
-│ (ParserAgent)            │
-└─────────────┬────────────┘
-              ↓
-┌──────────────────────────┐
-│ Generate Questions Node  │
-│ (QuestionGenerationAgent)│
-└─────────────┬────────────┘
-              ↓
-┌──────────────────────────┐
-│ Validate Question Count  │
-│ (Retry Guard)            │
-└──────────────────────────┘__
-        │retry                │continue
-        ↓                     ↓
-┌──────────────────┐   ┌──────────────────────────┐
-│Generate Questions│   │ Build FAQ Context Node   │
-│(Retry Attempt)   │   │ (ContentLogicAgent)      │
-└──────────────────┘   └─────────────┬────────────┘
-                                     ↓
-                          ┌──────────────────────────┐
-                          │ Generate FAQ Answers     │
-                          │ (AnswerGenerationAgent)  │
-                          └─────────────┬────────────┘
-                                        ↓
-                          ┌──────────────────────────┐
-                          │ Assemble FAQ Page        │
-                          │ (TemplateAgent)          │
-                          └─────────────┬────────────┘
-                                        ↓
-                          ┌──────────────────────────┐
-                          │ Assemble Product Page    │
-                          │ (TemplateAgent)          │
-                          └─────────────┬────────────┘
-                                        ↓
-                          ┌──────────────────────────┐
-                          │ Generate Comparison Page │
-                          │ (ComparisonAgent +       │
-                          │  TemplateAgent)          │
-                          └─────────────┬────────────┘
-                                        ↓
-                          ┌──────────────────────────┐
-                          │ Schema Validation Node   │
-                          │ (Pydantic Validation)   │
-                          └─────────────┬────────────┘
-                                        ↓
-                          ┌──────────────────────────┐
-                          │ Final Outputs            │
-                          │ + Execution Log          │
-                          └──────────────────────────┘
+```mermaid
+flowchart TD
+    A[Raw Product Inputs<br/>Primary + Comparison]
+    B[Parse & Normalize<br/>ParserAgent]
+    C[Generate Questions<br/>QuestionGenerationAgent]
+    D[Validate Question Count<br/>Retry Guard]
+    E[Generate Questions<br/>Retry Attempt]
+    F[Build FAQ Context<br/>ContentLogicAgent]
+    G[Generate FAQ Answers<br/>AnswerGenerationAgent]
+    H[Assemble FAQ Page<br/>TemplateAgent]
+    I[Assemble Product Page<br/>TemplateAgent]
+    J[Generate Comparison Page<br/>ComparisonAgent + TemplateAgent]
+    K[Schema Validation<br/>Pydantic]
+    L[Final Outputs<br/>+ Execution Log]
+
+    A --> B
+    B --> C
+    C --> D
+    D -->|retry| E
+    E --> D
+    D -->|continue| F
+    F --> G
+    G --> H
+    H --> I
+    I --> J
+    J --> K
+    K --> L
 ```
 
 ---
 
-## 2. Conditional Routing & Retry Logic
+## 2. Conditional Routing & Retry Logic 
 
 Question generation is protected by a **retry guard** implemented via LangGraph conditional edges.
 
-### Retry Logic Flow
+```mermaid
+flowchart TD
+    Q[Generate Questions]
+    V[Validate Question Count]
 
-```
-Generate Questions
-        ↓
-Validate Question Count
-        ↓
-Is count ≥ min_required_questions?
-        ├── Yes → Continue DAG
-        └── No  → Retry (if attempts < max)
-                    └── Else → Abort retry and continue
+    Q --> V
+    V -- count ≥ min_required_questions --> C[Continue DAG]
+    V -- count < min_required_questions --> R{Attempts < max?}
+    R -- Yes --> Q
+    R -- No --> C
 ```
 
 Key properties:
@@ -100,40 +68,45 @@ Key properties:
 
 A single `AgentState` object flows through all nodes.
 
-```
-AgentState
-├── raw_product_a
-├── raw_product_b
-├── normalized_product_a
-├── normalized_product_b
-├── generated_questions
-├── question_generation_attempts
-├── retry_flags
-├── faq_context
-├── faq_answers
-├── faq_page
-├── product_page
-├── comparison_page
-├── schema_validation_errors
-└── execution_log
+```mermaid
+flowchart LR
+    State[AgentState]
+
+    State --> rawA[raw_product_a]
+    State --> rawB[raw_product_b]
+    State --> normA[normalized_product_a]
+    State --> normB[normalized_product_b]
+    State --> questions[generated_questions]
+    State --> attempts[question_generation_attempts]
+    State --> flags[retry_flags]
+    State --> faqCtx[faq_context]
+    State --> faqAns[faq_answers]
+    State --> faqPage[faq_page]
+    State --> prodPage[product_page]
+    State --> compPage[comparison_page]
+    State --> errors[schema_validation_errors]
+    State --> log[execution_log]
 ```
 
-This ensures:
-- Transparency
-- Debuggability
-- Replayability
-- Framework-level observability
+This ensures transparency, debuggability, replayability, and framework-level observability.
 
 ---
 
-## 4. Schema Validation Gate
+## 4. Schema Validation Gate 
 
 Before termination, all outputs pass through a **schema validation node**.
 
-```
-FAQ Page ─────────┐
-Product Page ─────┼──▶ Schema Validation ─▶ End
-Comparison Page ──┘
+```mermaid
+flowchart TD
+    FAQ[FAQ Page]
+    PROD[Product Page]
+    COMP[Comparison Page]
+
+    FAQ --> V[Schema Validation]
+    PROD --> V
+    COMP --> V
+
+    V --> END[End of Graph]
 ```
 
 - Validation is performed using **Pydantic schemas**
@@ -146,23 +119,26 @@ Comparison Page ──┘
 
 Each node appends a human-readable entry to the execution log.
 
-```
-Example Execution Log
-[Parse Products]
-[Generate Questions – Attempt 1]
-[FAQ Count Validated]
-[Build FAQ Context]
-[Generate FAQ Answers]
-[Assemble FAQ Page]
-[Assemble Product Page]
-[Generate Comparison Page]
-[Schema Validation Successful]
+```mermaid
+sequenceDiagram
+    participant Runner
+    participant Graph
+    participant State
+
+    Runner->>Graph: invoke(state)
+    Graph->>State: Parse Products
+    Graph->>State: Generate Questions
+    Graph->>State: Validate Question Count
+    Graph->>State: Build FAQ Context
+    Graph->>State: Generate FAQ Answers
+    Graph->>State: Assemble Pages
+    Graph->>State: Schema Validation
+    Graph-->>Runner: Final State
 ```
 
-The log is persisted as:
+The execution log is persisted to:
 ```
 data/output/execution_log.txt
 ```
 
 ---
-
