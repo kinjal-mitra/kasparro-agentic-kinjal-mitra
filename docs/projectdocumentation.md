@@ -142,14 +142,3 @@ Validated aspects:
 This ensures tests reflect **system behavior**, not implementation details.
 
 ---
-
-## 9. Summary
-
-This project demonstrates:
-- Correct usage of an agentic framework (LangGraph)
-- Explicit state management
-- Conditional execution and retry logic
-- Schema-validated, machine-readable outputs
-- Production-grade observability
-
-The system is designed to be **auditable, extensible, and evaluator-compliant**.
